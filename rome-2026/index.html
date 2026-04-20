@@ -334,7 +334,7 @@ derbelli|Osteria Der Belli (nicer)|41.8898728|12.4707929|restaurant|Thu 28|ðŸ½ï
         beach: 'green'
     };
 
-    const map = L.map('map').setView([41.896, 12.483], 13);
+    const map = L.map('map');
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
     }).addTo(map);
@@ -399,6 +399,11 @@ derbelli|Osteria Der Belli (nicer)|41.8898728|12.4707929|restaurant|Thu 28|ðŸ½ï
 
         sidebarList.appendChild(groupDiv);
     });
+
+    if (venues.length > 0) {
+        const allBounds = L.latLngBounds(venues.map(v => [v.lat, v.lng]));
+        map.fitBounds(allBounds, { padding: [50, 50] });
+    }
 
     function zoomToDay(day) {
         const dayVenues = dayGroups[day];
