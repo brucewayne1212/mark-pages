@@ -240,7 +240,7 @@
 
     <div id="detail-panel">
         <button class="panel-close" onclick="closePanel()">✕</button>
-        <img id="p-photo" class="detail-img" src="" alt="Venue Photo" onerror="this.style.display='none'">
+        <img id="p-photo" class="detail-img" src="" alt="Venue Photo" onerror="this.onerror=null;this.src='https://www.openstreetmap.org/export/embed.html?bbox='+((parseFloat(this.dataset.lng)-0.002))+',+((parseFloat(this.dataset.lat)-0.001))+','+((parseFloat(this.dataset.lng)+0.002))+','+((parseFloat(this.dataset.lat)+0.001))+'onerror="this.style.display='none'layer=mapnikonerror="this.style.display='none'marker='+this.dataset.lat+','+this.dataset.lng">
         <div class="detail-body">
             <div id="p-title" class="detail-title"></div>
             <div id="p-rating" style="color: #f39c12; font-weight: bold; margin-bottom: 10px;"></div>
@@ -423,9 +423,19 @@ derbelli|Osteria Der Belli (nicer)|41.8898728|12.4707929|restaurant|Thu 28|🍽�
         document.getElementById('p-address').innerText = `📍 ${v.address}`;
         document.getElementById('p-web').innerHTML = v.url !== 'null' ? `🌐 <a href="${v.url}" target="_blank">Website</a>` : '';
         
-        const photoUrl = PHOTOS[v.id] || null;
-        document.getElementById('p-photo').src = photoUrl;
-        document.getElementById('p-photo').style.display = photoUrl ? 'block' : 'none';
+        const img = document.getElementById('p-photo');
+        img.dataset.lat = v.lat;
+        img.dataset.lng = v.lng;
+        const photoUrl = PHOTOS[v.id];
+        if (photoUrl) {
+            img.src = photoUrl;
+        } else {
+            // No photo — use embedded OpenStreetMap as fallback
+            img.src = 'https://www.openstreetmap.org/export/embed.html?bbox='
+                + (parseFloat(v.lng)-0.002) + ',' + (parseFloat(v.lat)-0.001) + ','
+                + (parseFloat(v.lng)+0.002) + ',' + (parseFloat(v.lat)+0.001)
+                + '&layer=mapnik&marker=' + v.lat + ',' + v.lng;
+        }
         document.getElementById('p-photo').src = photoUrl;
 
         const hoursHtml = v.hours !== 'null' 
