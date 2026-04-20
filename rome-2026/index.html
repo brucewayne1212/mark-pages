@@ -280,9 +280,9 @@
   "villa_borghese": "https://lh3.googleusercontent.com/place-photos/AJRVUZNEsdeOgCQq9l6Y5aV5O1rxzt34iCGY1AsxBiQ97lP-CYHKPy6OIPT8TNziJExJ5kti-rmDC-s02kGNDELWHGLR5P3pS4WHK6_VMdsFuQrkBNK_iqaxV4R0ulJWyWQjtfqqFfP1VUQdeRtghQ=s4800-h400",
   "drinkkong": "https://lh3.googleusercontent.com/places/ANXAkqGnpAlAn-d8W0Q0w5NBc7V9-AEy_JI3ZQf2otRikZ4tqRigQKfeFJIlthHUgpzYhoL1xMAzeovJYjni3UXBWuGPLX1SgLvHWtA=s4800-h400",
   "vatican": "https://lh3.googleusercontent.com/place-photos/AJRVUZMzTxyDjQ5rZJsumZLG9wK-1lM-5-Vj-1tnmqjqix-NirfI69L2nZEWUSdQnSWqDSpNa67zg81MJUjEpkuJq5c0NZv_3ZVRQmszpP7pzOrWZgMUXgULXecEwC3JxHyxv34vDOBPIKNSZtgQwNA=s4800-h400",
-  "castroni": "https://lh3.googleusercontent.com/place-photos/AJRVUZPQ4uWXkui71ddbea1h7dojhMmXtCHJNt-JWUObV-SNMQbiJxLj0L1xMAzeovJYjni3UXBWuGPLX1SgLvHWtA=s4800-h400",
-  "arlu": "https://lh3.googleusercontent.com/place-photos/AJRVUZGdPdViOmjW0nOiI8tyfarAFG-a_hlJ4oRaIk-U9kPLM2IOXeYj0xMAzeovJYjni3UXBWuGPLX1SgLvHWtA=s4800-h400",
-  "derbelli": "https://lh3.googleusercontent.com/places/ANXAkqGK030J2AP-2HxBcUeN7pVSf9yUMbiD6_ENMNn2DA=s4800-h400",
+  "castroni": "https://lh3.googleusercontent.com/place-photos/AJRVUZPM4uXIku71ddbeaak1h7dojhMmXtCHJNt-JWUObU-SMWQBnqqYzJoV1k7SaO5PVedwMzF9vLgEPPBiX9N9r2smVXtIf_d6olgmj2Sz1IHBkKpu0jYk7T4ZUmiyx5Ohn15Ca5LSYhuSrqpPJnT4VL6zWA=s4800-h400",
+  "arlu": "https://lh3.googleusercontent.com/places/ANXAkqGdPdViOmjW0nOiI8tyfarAFG-a_hlJ4oRaIk-U9kPL2sIOXXf1owlM3uPvWKxOIvLJSJPnRxLEAl7EkT671SURr4clt0qVeWw=s4800-h400",
+  "derbelli": "https://lh3.googleusercontent.com/places/ANXAkqGK032AP-2HxByUe7pVJVifo9uMb5biFFdhXmmYf3oOkgz52vmaluMWqdi26jnaWxBtiqkbr9toXJqLBeekozko1jGkVbn2VmM=s4800-h400",
   "old_bridge": "https://lh3.googleusercontent.com/places/ANXAkqEEO53gCmpo67APRGcqOkiXZOr2_nfQ_31SdK7kN5UMYC18k86Jmy1BTDMn9uibRl0ZyVpAxvI3tay8xywYnvw-6OGy3exlSrE=s4800-h400",
   "200gradi": "https://lh3.googleusercontent.com/place-photos/AJRVUZMHd2X89t0WoGJvFuVjp8911ii5Cu1CYL4i3dBd45jXW69ONB1awN_Zv_pBN3hRG_5CZ4e-K4R0FSVyIQhmWPhILRbBsjHl6dIDSQ-eJbXPnBekuJV4Nkw334UckAK9QCitCdUuq7vIpTRUPAFGY3aD=s4800-h400",
   "tonnarello": "https://lh3.googleusercontent.com/place-photos/AJRVUZP69cInnOeGEUQMJXDfyzB9mMZF0QRx1X3kjaupkZKoQc3YahVPH3PWl0n86xbmkrQJGtADV3jy0IMYWVSBHCBB95EDvU2GbvGc5nGtO1tayQTk3QUu7aNBnroPJ4HvOzejjAmC34FQoIxrNw=s4800-h400",
@@ -430,11 +430,10 @@ derbelli|Osteria Der Belli (nicer)|41.8898728|12.4707929|restaurant|Thu 28|🍽�
         if (photoUrl) {
             img.src = photoUrl;
         } else {
-            // No photo — use embedded OpenStreetMap as fallback
-            img.src = 'https://www.openstreetmap.org/export/embed.html?bbox='
-                + (parseFloat(v.lng)-0.002) + ',' + (parseFloat(v.lat)-0.001) + ','
-                + (parseFloat(v.lng)+0.002) + ',' + (parseFloat(v.lat)+0.001)
-                + '&layer=mapnik&marker=' + v.lat + ',' + v.lng;
+            // No photo — use static OSM map as fallback
+            img.src = 'https://staticmap.openstreetmap.de/staticmap.php?center='
+                + v.lat + ',' + v.lng + '&zoom=17&size=800x400&maptype=mapnik&markers='
+                + v.lat + ',' + v.lng + ',red-pushpin';
         }
         document.getElementById('p-photo').src = photoUrl;
 
