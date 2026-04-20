@@ -241,7 +241,7 @@
 
     <div id="detail-panel">
         <button class="panel-close" onclick="closePanel()">✕</button>
-        <img id="p-photo" class="detail-img" src="" alt="Venue Photo" onerror="this.onerror=null;this.src='https://staticmap.openstreetmap.de/staticmap.php?center='+this.dataset.lat+','+this.dataset.lng+'&zoom=17&size=800x400&maptype=mapnik&markers='+this.dataset.lat+','+this.dataset.lng+',red-pushpin'">
+        <img id="p-photo" class="detail-img" src="" alt="Venue Photo" onerror="this.onerror=null; this.style.display=\'none\';">
         <div class="detail-body">
             <div id="p-title" class="detail-title"></div>
             <div id="p-rating" style="color: #f39c12; font-weight: bold; margin-bottom: 10px;"></div>
@@ -498,11 +498,10 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
         const photoUrl = PHOTOS[v.id];
         if (photoUrl) {
             img.src = photoUrl;
+            img.style.display = 'block';
         } else {
             // No photo — use static OSM map as fallback
-            img.src = 'https://staticmap.openstreetmap.de/staticmap.php?center='
-                + v.lat + ',' + v.lng + '&zoom=17&size=800x400&maptype=mapnik&markers='
-                + v.lat + ',' + v.lng + ',red-pushpin';
+            img.style.display = 'none';
         }
         document.getElementById('p-photo').src = photoUrl;
 
@@ -546,8 +545,9 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
         const photoUrl = typeof NEARBY_PHOTOS !== 'undefined' ? NEARBY_PHOTOS[id] : null;
         if (photoUrl) {
             img.src = photoUrl;
+            img.style.display = 'block';
         } else {
-            img.src = 'https://staticmap.openstreetmap.de/staticmap.php?center=' + v.lat + ',' + v.lng + '&zoom=17&size=800x400&maptype=mapnik&markers=' + v.lat + ',' + v.lng + ',red-pushpin';
+            img.style.display = 'none';
         }
 
         const hoursArr = v.hours && v.hours !== 'null' ? v.hours.split(' | ') : [];
