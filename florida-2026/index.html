@@ -278,8 +278,8 @@ toojays|TooJay's Deli|26.848|-80.088|restaurant|Mon 27|🥪|Casual NY-style deli
 jupiter-lighthouse|Jupiter Inlet Lighthouse & Museum|26.9478|-80.0827|attraction|Tue 28|🗼|Climb the 1860 lighthouse for incredible views of the coast. Kids will enjoy the history.|https://www.jupiterlighthouse.org/|null|4.7|500 Captain Armours Way, Jupiter, FL 33469|10:00 AM - 4:00 PM
 carlin-park|Carlin Park|26.9332|-80.0735|beach|Tue 28|🌴|Relaxed local beach park to wind down before heading home.|https://discover.pbc.gov/parks/Locations/Carlin.aspx|null|4.6|400 Florida A1A, Jupiter, FL 33477|Sunrise - Sunset
 havana|Havana Restaurant|26.6534|-80.0617|restaurant|Tue 28|🥘|Great Cuban food with fantastic pescatarian options and a lively family atmosphere.|https://www.havanacubanfood.com/|null|4.6|6801 S Dixie Hwy, West Palm Beach, FL 33405|Open 24 hours`;
-    const nearbyDiningData = `{{NEARBY_DINING_DATA}}`;
-    const NEARBY_PHOTOS = {{NEARBY_PHOTOS_JSON}};
+    const nearbyDiningData = ``;
+    const NEARBY_PHOTOS = [];
 
     const venues = rawData.trim().split('\n').map(line => {
         const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
@@ -313,7 +313,7 @@ havana|Havana Restaurant|26.6534|-80.0617|restaurant|Tue 28|🥘|Great Cuban foo
     const nearbyLayer = L.layerGroup();
     const parsedNearby = [];
     
-    if (nearbyDiningData.trim() !== '' && !nearbyDiningData.includes('{{NEARBY_DINING_DATA}}')) {
+    if (nearbyDiningData.trim() !== '' && true) {
         const nearbyLines = nearbyDiningData.trim().split('\n');
         nearbyLines.forEach(line => {
             const [id, name, lat, lng, rating, price, address, url, hours] = line.split('|');
