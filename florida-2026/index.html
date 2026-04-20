@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jupiter & Palm Beach 2026 - Interactive Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --sidebar-width: 320px;
+            --panel-width: 400px;
+            --primary-bg: #ffffff;
+            --accent-color: #007bff;
+            --text-main: #333;
+            --text-muted: #666;
+            --shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #layout {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Sidebar Styles */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100%;
+            background: var(--primary-bg);
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        #sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-content {
+            padding: 10px;
+        }
+
+        .day-group {
+            margin-bottom: 20px;
+        }
+
+        .day-header {
+            font-weight: bold;
+            padding: 8px;
+            background: #eee;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .day-header:hover { background: #e0e0e0; }
+
+        .venue-item {
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+        }
+
+        .venue-item:hover { background: #f9f9f9; }
+        .venue-item span { margin-right: 8px; }
+
+        /* Map Container */
+        #map {
+            flex: 1;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Detail Panel Styles */
+        #detail-panel {
+            position: absolute;
+            top: 0;
+            right: -100%;
+            width: var(--panel-width);
+            height: 100%;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+            z-index: 2000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #detail-panel.active {
+            right: 0;
+        }
+
+        .panel-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.8);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2001;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .detail-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: #eee;
+        }
+
+        .detail-body {
+            padding: 20px;
+        }
+
+        .detail-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-meta {
+            margin-bottom: 15px;
+            color: var(--text-muted);
+            font-size: 0.95em;
+        }
+
+        .detail-hours {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .detail-hours h4 { margin: 0 0 10px 0; font-size: 1em; }
+        .detail-hours ul { padding-left: 20px; margin: 0; font-size: 0.9em; }
+
+        .btn-more {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 8px;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1002;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        /* Legend */
+        #legend {
+            padding: 10px;
+            font-size: 0.8em;
+            border-top: 1px solid #ddd;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 4px; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; border: 1px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.5); }
+
+        @media (max-width: 600px) {
+            #sidebar { width: 100%; position: absolute; }
+            #detail-panel { width: 100%; }
+            #sidebar.collapsed { transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="layout">
+    <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
+    
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <strong>Florida 2026</strong>
+        </div>
+        <div class="sidebar-content" id="sidebar-list">
+            <!-- Groups dynamic -->
+        </div>
+        <div id="legend">
+            <strong>Legend</strong>
+            <div class="legend-item"><span class="dot" style="background: purple;"></span> Accommodation</div>
+            <div class="legend-item"><span class="dot" style="background: red;"></span> Attraction</div>
+            <div class="legend-item"><span class="dot" style="background: orange;"></span> Restaurant</div>
+            <div class="legend-item"><span class="dot" style="background: pink;"></span> Gelato</div>
+            <div class="legend-item"><span class="dot" style="background: blue;"></span> Bar</div>
+            <div class="legend-item"><span class="dot" style="background: green;"></span> Beach</div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="detail-panel">
+        <button class="panel-close" onclick="closePanel()">✕</button>
+        <img id="p-photo" class="detail-img" src="" alt="Venue Photo" onerror="this.onerror=null;this.src='https://www.openstreetmap.org/export/embed.html?bbox='+((parseFloat(this.dataset.lng)-0.002))+',+((parseFloat(this.dataset.lat)-0.001))+','+((parseFloat(this.dataset.lng)+0.002))+','+((parseFloat(this.dataset.lat)+0.001))+'onerror="this.style.display='none'layer=mapnikonerror="this.style.display='none'marker='+this.dataset.lat+','+this.dataset.lng">
+        <div class="detail-body">
+            <div id="p-title" class="detail-title"></div>
+            <div id="p-rating" style="color: #f39c12; font-weight: bold; margin-bottom: 10px;"></div>
+            <div class="detail-meta">
+                <div id="p-address" style="margin-bottom: 8px;"></div>
+                <div id="p-web"></div>
+            </div>
+            <div class="detail-hours">
+                <h4>Opening Hours</h4>
+                <div id="p-hours"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const PHOTOS = {};
+    const rawData = `dubois-park|DuBois Park|26.9455|-80.0768|beach|Thu 23|🏖️|Perfect relaxed first day. Family-friendly, shallow swimming lagoons. Great for kids.|https://discover.pbc.gov/parks/Locations/DuBois.aspx|null|4.8|19075 DuBois Road, Jupiter, FL 33477|Sunrise - Sunset
+lazy-loggerhead|Lazy Loggerhead Cafe|26.9329|-80.0754|restaurant|Thu 23|🥞|Casual beachside cafe located in Carlin Park. Great breakfast/lunch options, pescatarian friendly.|http://www.lazyloggerheadcafe.com/|null|4.6|6 Van Kessel Pkwy, Jupiter, FL 33477|7:00 AM - 2:30 PM
+loggerhead-marinelife|Loggerhead Marinelife Center|26.8833|-80.0543|attraction|Fri 24|🐢|Incredible sea turtle hospital and conservation center. Very educational for the kids.|https://marinelife.org/|null|4.8|14200 US-1, Juno Beach, FL 33408|10:00 AM - 5:00 PM
+juno-beach-park|Juno Beach Park|26.8863|-80.0537|beach|Fri 24|🌊|Beautiful beach right by the Marinelife Center. Features a large pier.|https://discover.pbc.gov/parks/Locations/Juno.aspx|null|4.7|14775 U.S. Highway One, Juno Beach, FL 33408|Sunrise - Sunset
+the-catch-seafood|The Catch Seafood & Sushi|26.8093|-80.0601|restaurant|Fri 24|🍣|Excellent fresh seafood and sushi, perfect for pescatarians.|https://www.thecatchseafoodsushi.com/|null|4.5|766 Northlake Blvd, North Palm Beach, FL 33408|11:30 AM - 10:00 PM
+lion-country|Lion Country Safari|26.6806|-80.3204|attraction|Sat 25|🦁|Drive-through safari and walk-through amusement park. NOTE: Cashless venue. Advance booking recommended.|https://www.lioncountrysafari.com/|null|4.4|2003 Lion Country Safari Rd, Loxahatchee, FL 33470|9:30 AM - 5:30 PM (admission ends 4:30 PM)
+sailfish-marina|Sailfish Marina Restaurant|26.782|-80.04|restaurant|Sat 25|🐟|Fantastic waterfront dining with fresh local seafood. Great views of the marina.|https://sailfishmarina.com/restaurant/|null|4.3|98 Lake Dr, Palm Beach Shores, FL 33404|7:00 AM - 10:00 PM
+busch-wildlife|Busch Wildlife Sanctuary|26.938|-80.17|attraction|Sun 26|🐊|Wildlife rescue and sanctuary. Great walking trails to see Florida wildlife.|https://www.buschwildlife.org/|null|4.8|17855 Rocky Pines Rd, Jupiter, FL 33478|9:00 AM - 4:30 PM
+riverbend-park|Riverbend Park|26.932|-80.174|attraction|Sun 26|🛶|Beautiful park for kayaking on the Loxahatchee River. Kayak rentals available at Jupiter Outdoor Center.|https://discover.pbc.gov/parks/Locations/Riverbend.aspx|null|4.9|9060 W Indiantown Rd, Jupiter, FL 33478|Sunrise - Sunset
+portobello|Portobello Cucina Italiana|26.929|-80.098|restaurant|Sun 26|🍝|Excellent family-friendly Italian restaurant with great seafood pasta options.|https://www.portobellojupiter.com/|null|4.5|351 US-1, Jupiter, FL 33477|4:30 PM - 10:00 PM
+rapids-water-park|Rapids Water Park|26.7725|-80.113|attraction|Mon 27|🎢|Massive 35-acre water park with 40+ slides. Perfect all-day activity for the kids.|https://rapidswaterpark.com/|null|4.4|6566 N Military Trl, Riviera Beach, FL 33407|10:00 AM - 5:00 PM
+toojays|TooJay's Deli|26.848|-80.088|restaurant|Mon 27|🥪|Casual NY-style deli with lots of options including salads and fish dishes.|https://www.toojays.com/|null|4.3|11701 Lake Victoria Gardens Ave, Palm Beach Gardens, FL 33410|8:00 AM - 8:30 PM
+jupiter-lighthouse|Jupiter Inlet Lighthouse & Museum|26.9478|-80.0827|attraction|Tue 28|🗼|Climb the 1860 lighthouse for incredible views of the coast. Kids will enjoy the history.|https://www.jupiterlighthouse.org/|null|4.7|500 Captain Armours Way, Jupiter, FL 33469|10:00 AM - 4:00 PM
+carlin-park|Carlin Park|26.9332|-80.0735|beach|Tue 28|🌴|Relaxed local beach park to wind down before heading home.|https://discover.pbc.gov/parks/Locations/Carlin.aspx|null|4.6|400 Florida A1A, Jupiter, FL 33477|Sunrise - Sunset
+havana|Havana Restaurant|26.6534|-80.0617|restaurant|Tue 28|🥘|Great Cuban food with fantastic pescatarian options and a lively family atmosphere.|https://www.havanacubanfood.com/|null|4.6|6801 S Dixie Hwy, West Palm Beach, FL 33405|Open 24 hours`;
+
+    const venues = rawData.trim().split('\n').map(line => {
+        const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
+        return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
+    });
+
+    const typeColors = {
+        accommodation: 'purple',
+        attraction: 'red',
+        restaurant: 'orange',
+        gelato: 'pink',
+        bar: 'blue',
+        beach: 'green'
+    };
+
+    const map = L.map('map').setView([41.896, 12.483], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const markers = {};
+    const dayGroups = {};
+
+    // Grouping for sidebar
+    venues.forEach(v => {
+        if (!dayGroups[v.day]) dayGroups[v.day] = [];
+        dayGroups[v.day].push(v);
+    });
+
+    // Populate Sidebar and Markers
+    const sidebarList = document.getElementById('sidebar-list');
+    
+    Object.keys(dayGroups).forEach(day => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'day-group';
+        
+        const header = document.createElement('div');
+        header.className = 'day-header';
+        header.innerHTML = `<span>${day}</span> <span>🔍</span>`;
+        header.onclick = () => zoomToDay(day);
+        
+        groupDiv.appendChild(header);
+
+        dayGroups[day].forEach(v => {
+            // Marker
+            const color = typeColors[v.type] || 'gray';
+            const marker = L.circleMarker([v.lat, v.lng], {
+                radius: 8,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            const popupContent = `
+                <div style="min-width: 150px;">
+                    <strong>${v.icon} ${v.name}</strong><br>
+                    <small>${v.desc}</small><br>
+                    <small><em>${v.day}</em></small><br>
+                    <button class="btn-more" onclick="openDetails('${v.id}')">More details →</button>
+                </div>
+            `;
+            marker.bindPopup(popupContent);
+            markers[v.id] = marker;
+
+            // Sidebar Item
+            const item = document.createElement('div');
+            item.className = 'venue-item';
+            item.innerHTML = `<span>${v.icon}</span> ${v.name}`;
+            item.onclick = () => {
+                map.setView([v.lat, v.lng], 16);
+                marker.openPopup();
+                if (window.innerWidth < 600) toggleSidebar();
+            };
+            groupDiv.appendChild(item);
+        });
+
+        sidebarList.appendChild(groupDiv);
+    });
+
+    function zoomToDay(day) {
+        const dayVenues = dayGroups[day];
+        const bounds = L.latLngBounds(dayVenues.map(v => [v.lat, v.lng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    }
+
+    function openDetails(id) {
+        const v = venues.find(item => item.id === id);
+        if (!v) return;
+
+        // Close popup first
+        if (markers[id]) markers[id].closePopup();
+
+        // Populate Panel
+        document.getElementById('p-title').innerHTML = `${v.icon} ${v.name}`;
+        document.getElementById('p-rating').innerText = v.rating !== 'null' ? `⭐ ${v.rating}` : '';
+        document.getElementById('p-address').innerText = `📍 ${v.address}`;
+        document.getElementById('p-web').innerHTML = v.url !== 'null' ? `🌐 <a href="${v.url}" target="_blank">Website</a>` : '';
+        
+        const img = document.getElementById('p-photo');
+        img.dataset.lat = v.lat;
+        img.dataset.lng = v.lng;
+        const photoUrl = PHOTOS[v.id];
+        if (photoUrl) {
+            img.src = photoUrl;
+        } else {
+            // No photo — use static OSM map as fallback
+            img.src = 'https://staticmap.openstreetmap.de/staticmap.php?center='
+                + v.lat + ',' + v.lng + '&zoom=17&size=800x400&maptype=mapnik&markers='
+                + v.lat + ',' + v.lng + ',red-pushpin';
+        }
+        document.getElementById('p-photo').src = photoUrl;
+
+        const hoursHtml = v.hours !== 'null' 
+            ? `<ul>${v.hours.split(', ').map(h => `<li>${h}</li>`).join('')}</ul>`
+            : '<p>Hours not available.</p>';
+        document.getElementById('p-hours').innerHTML = hoursHtml;
+
+        document.getElementById('detail-panel').classList.add('active');
+    }
+
+    function closePanel() {
+        document.getElementById('detail-panel').classList.remove('active');
+    }
+</script>
+
+</body>
+</html>
