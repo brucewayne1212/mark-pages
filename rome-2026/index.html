@@ -337,10 +337,24 @@ derbelli|Osteria Der Belli (nicer)|41.8898728|12.4707929|restaurant|Thu 28|🍽�
         beach: 'green'
     };
 
-    const map = L.map('map');
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    const standard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+    const transitBase = L.tileLayer('https://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap &copy; ÖPNVKarte' });
+    const railOverlay = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap &copy; OpenRailwayMap' });
+
+    const map = L.map('map', {
+        layers: [standard]
+    });
+
+    const baseMaps = {
+        "Standard Map": standard,
+        "Public Transit Network": transitBase
+    };
+    
+    const overlayMaps = {
+        "Rail & Tram Lines": railOverlay
+    };
+
+    L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(map);
 
     const markers = {};
     const dayGroups = {};
