@@ -332,6 +332,7 @@ ChIJdfXYwGNgLxMR-2e_sz72n04|Museum Restaurant|41.9076884|12.4539457|4.6|£|Via S
 ChIJo-1DkPZhLxMRWm9ty5GH6Mc|Jollibee Roma|41.908395899999995|12.457803199999999|4.5|Unknown|Via Ottaviano, 83, 00192 Roma RM, Italy|http://www.jollibee-italia.it/|Monday: 10:00 AM – 10:00 PM | Tuesday: 10:00 AM – 10:00 PM | Wednesday: 10:00 AM – 10:00 PM | Thursday: 10:00 AM – 10:00 PM | Friday: 10:00 AM – 10:00 PM | Saturday: 10:00 AM – 10:00 PM | Sunday: 10:00 AM – 10:00 PM
 ChIJ0y9zzWBgLxMRMvDSjx72Ze8|La Soffitta Renovatio|41.90591|12.4590061|4.5|££|Piazza del Risorgimento, 46/a, 00192 Roma RM, Italy|http://www.lasoffittarenovatio.com/|Monday: 11:30 AM – 11:30 PM | Tuesday: 11:30 AM – 11:30 PM | Wednesday: 11:30 AM – 11:30 PM | Thursday: 11:30 AM – 11:30 PM | Friday: 11:30 AM – 11:30 PM | Saturday: 11:30 AM – 11:30 PM | Sunday: 11:30 AM – 11:30 PM
 ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.455217999999999|4.5|££|Via Leone IV, 123, 00192 Roma RM, Italy|https://www.caligolaosteriasincera.it/|Monday: 12:00 PM – 12:00 AM | Tuesday: 12:00 PM – 12:00 AM | Wednesday: 12:00 PM – 12:00 AM | Thursday: 12:00 PM – 12:00 AM | Friday: 12:00 PM – 12:00 AM | Saturday: 12:00 PM – 12:00 AM | Sunday: 12:00 PM – 12:00 AM`;
+    const NEARBY_PHOTOS = {};
 
     const venues = rawData.trim().split('\n').map(line => {
         const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
@@ -356,17 +357,30 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
     });
 
 
+    
     const baseMaps = {
         "Standard Map": standard,
         "Public Transit Network": transitBase
     };
     
     const nearbyLayer = L.layerGroup();
+    const parsedNearby = [];
     
-    if (nearbyDiningData.trim() !== '' && !nearbyDiningData.includes('{{' + 'NEARBY_DINING_DATA' + '}}')) {
+    if (nearbyDiningData.trim() !== '' && !nearbyDiningData.includes('ChIJk9b_C0lhLxMRVZU0LFFikiQ|Tonnarello San Pietro|41.9048543|12.4589588|4.8|££|Via del Mascherino, 80, 00193 Roma RM, Italy|https://www.tonnarellosanpietro.it/|Monday: 9:00 AM – 11:00 PM | Tuesday: 9:00 AM – 11:00 PM | Wednesday: 9:00 AM – 11:00 PM | Thursday: 9:00 AM – 11:00 PM | Friday: 9:00 AM – 11:00 PM | Saturday: 9:00 AM – 11:00 PM | Sunday: 9:00 AM – 11:00 PM
+ChIJvbFqxmNgLxMR2CDwjXDxTUI|Caffè Delle Commari|41.908024|12.4540957|4.8|Unknown|Via Santamaura, 22, 00192 Roma RM, Italy|https://social.quandoo.com/en/groups/caffe-delle-comari-roma-92650|Monday: 6:30 AM – 10:00 PM | Tuesday: 6:30 AM – 10:00 PM | Wednesday: 6:30 AM – 10:00 PM | Thursday: 6:30 AM – 10:00 PM | Friday: 6:30 AM – 10:30 PM | Saturday: 6:30 AM – 10:30 PM | Sunday: 7:00 AM – 10:00 PM
+ChIJvXHn32ZgLxMRm_G_okClNeE|Pastasciutta|41.9046721|12.458083799999999|4.7|£|Via delle Grazie, 5, 00193 Roma RM, Italy|http://www.pastasciuttaroma.it/|Monday: 10:00 AM – 10:00 PM | Tuesday: 10:00 AM – 10:00 PM | Wednesday: 10:00 AM – 10:00 PM | Thursday: 10:00 AM – 10:00 PM | Friday: 10:00 AM – 10:00 PM | Saturday: 10:00 AM – 10:00 PM | Sunday: 10:00 AM – 10:00 PM
+ChIJK9t532BgLxMR_Dw88r_MGSU|Pinsa 'mpò - pinseria romana a roma prati vaticano|41.9068661|12.458185799999999|4.7|£|Via dei Gracchi, 7, 00192 Roma RM, Italy|http://pinsampo.it/|Monday: 10:30 AM – 9:00 PM | Tuesday: 10:30 AM – 9:00 PM | Wednesday: 10:30 AM – 9:00 PM | Thursday: 10:30 AM – 9:00 PM | Friday: 10:30 AM – 9:30 PM | Saturday: 10:30 AM – 9:30 PM | Sunday: Closed
+ChIJdZNuZ2BgLxMROoRffR51-VY|Osteria Ragno d'oro|41.90863890000001|12.4596208|4.6|££|Via Silla, 26, 00192 Roma RM, Italy|https://www.ragnodoro.it/|Monday: 7:00 – 11:00 PM | Tuesday: 12:30 – 3:00 PM, 7:00 – 11:00 PM | Wednesday: 12:30 – 3:00 PM, 7:00 – 11:00 PM | Thursday: 12:30 – 3:00 PM, 7:00 – 11:00 PM | Friday: 12:30 – 3:00 PM, 7:00 – 11:00 PM | Saturday: 12:30 – 3:00 PM, 7:00 – 11:00 PM | Sunday: Closed
+ChIJaVa3SWFgLxMRoJDHWzGuMNs|200 Gradi|41.9064553|12.4565817|4.6|££|Piazza del Risorgimento, 3, 00192 Roma RM, Italy|https://www.duecentogradi.com/|Monday: 10:30 AM – 3:00 AM | Tuesday: 10:30 AM – 3:00 AM | Wednesday: 10:30 AM – 3:00 AM | Thursday: 10:30 AM – 3:00 AM | Friday: 10:30 AM – 4:00 AM | Saturday: 10:30 AM – 4:00 AM | Sunday: 11:00 AM – 3:00 AM
+ChIJdfXYwGNgLxMR-2e_sz72n04|Museum Restaurant|41.9076884|12.4539457|4.6|£|Via Santamaura, 5, 00192 Roma RM, Italy|https://m.facebook.com/pages/Ristorante-ai-Musei-Di-Giulio-Massa/444631972311066|Monday: 11:30 AM – 5:00 PM | Tuesday: 11:30 AM – 5:00 PM | Wednesday: 11:30 AM – 5:00 PM | Thursday: 11:30 AM – 5:00 PM | Friday: 11:30 AM – 5:00 PM | Saturday: 11:30 AM – 5:00 PM | Sunday: Closed
+ChIJo-1DkPZhLxMRWm9ty5GH6Mc|Jollibee Roma|41.908395899999995|12.457803199999999|4.5|Unknown|Via Ottaviano, 83, 00192 Roma RM, Italy|http://www.jollibee-italia.it/|Monday: 10:00 AM – 10:00 PM | Tuesday: 10:00 AM – 10:00 PM | Wednesday: 10:00 AM – 10:00 PM | Thursday: 10:00 AM – 10:00 PM | Friday: 10:00 AM – 10:00 PM | Saturday: 10:00 AM – 10:00 PM | Sunday: 10:00 AM – 10:00 PM
+ChIJ0y9zzWBgLxMRMvDSjx72Ze8|La Soffitta Renovatio|41.90591|12.4590061|4.5|££|Piazza del Risorgimento, 46/a, 00192 Roma RM, Italy|http://www.lasoffittarenovatio.com/|Monday: 11:30 AM – 11:30 PM | Tuesday: 11:30 AM – 11:30 PM | Wednesday: 11:30 AM – 11:30 PM | Thursday: 11:30 AM – 11:30 PM | Friday: 11:30 AM – 11:30 PM | Saturday: 11:30 AM – 11:30 PM | Sunday: 11:30 AM – 11:30 PM
+ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.455217999999999|4.5|££|Via Leone IV, 123, 00192 Roma RM, Italy|https://www.caligolaosteriasincera.it/|Monday: 12:00 PM – 12:00 AM | Tuesday: 12:00 PM – 12:00 AM | Wednesday: 12:00 PM – 12:00 AM | Thursday: 12:00 PM – 12:00 AM | Friday: 12:00 PM – 12:00 AM | Saturday: 12:00 PM – 12:00 AM | Sunday: 12:00 PM – 12:00 AM')) {
         const nearbyLines = nearbyDiningData.trim().split('\n');
         nearbyLines.forEach(line => {
             const [id, name, lat, lng, rating, price, address, url, hours] = line.split('|');
+            parsedNearby.push({id, name, lat, lng, rating, price, address, url, hours});
+            
             const marker = L.circleMarker([parseFloat(lat), parseFloat(lng)], {
                 radius: 7,
                 fillColor: '#FFD700',
@@ -376,20 +390,11 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
                 fillOpacity: 0.9
             });
             
-            const hoursArr = hours && hours !== 'null' ? hours.split(' | ') : [];
-            const hoursHtml = hoursArr.length ? `<ul style="padding-left:15px; margin:0;">${hoursArr.map(h => `<li>${h}</li>`).join('')}</ul>` : 'Hours not available';
-            
             const popupContent = `
-                <div style="min-width: 200px; max-width: 250px;">
+                <div style="min-width: 180px;">
                     <strong>🍽️ ${name}</strong><br>
                     <span style="color: #f39c12; font-weight: bold;">⭐ ${rating}</span> &nbsp; <span style="color: green; font-weight: bold;">${price}</span><br>
-                    <small>📍 ${address}</small><br>
-                    ${url !== 'null' ? `<small>🌐 <a href="${url}" target="_blank">Website</a></small><br>` : ''}
-                    <button class="btn-more" style="margin-top:8px;font-size:0.8em;width:100%;" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${lat},${lng}', '_blank')">🧭 Google Maps</button>
-                    <hr style="margin:8px 0; border:0; border-top:1px solid #eee;">
-                    <div style="font-size:0.8em; max-height:100px; overflow-y:auto;">
-                        ${hoursHtml}
-                    </div>
+                    <button class="btn-more" style="margin-top:8px;" onclick="openNearbyDetails('${id}')">More details →</button>
                 </div>
             `;
             marker.bindPopup(popupContent);
@@ -401,6 +406,7 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
         "Rail & Tram Lines": railOverlay,
         "Nearby Affordable Dining": nearbyLayer
     };
+
 
 
     L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(map);
@@ -526,6 +532,52 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
             });
         } else {
             distDiv.innerHTML = '';
+        }
+
+        document.getElementById('detail-panel').classList.add('active');
+    }
+
+    
+    function openNearbyDetails(id) {
+        const v = parsedNearby.find(item => item.id === id);
+        if (!v) return;
+
+        // Populate Panel
+        document.getElementById('p-title').innerHTML = `🍽️ ${v.name}`;
+        document.getElementById('p-rating').innerText = `⭐ ${v.rating} • ${v.price}`;
+        document.getElementById('p-address').innerText = `📍 ${v.address}`;
+        document.getElementById('p-web').innerHTML = v.url !== 'null' ? `🌐 <a href="${v.url}" target="_blank">Website</a>` : '';
+        
+        const img = document.getElementById('p-photo');
+        img.dataset.lat = v.lat;
+        img.dataset.lng = v.lng;
+        
+        const photoUrl = typeof NEARBY_PHOTOS !== 'undefined' ? NEARBY_PHOTOS[id] : null;
+        if (photoUrl) {
+            img.src = photoUrl;
+        } else {
+            img.src = 'https://staticmap.openstreetmap.de/staticmap.php?center=' + v.lat + ',' + v.lng + '&zoom=17&size=800x400&maptype=mapnik&markers=' + v.lat + ',' + v.lng + ',red-pushpin';
+        }
+
+        const hoursArr = v.hours && v.hours !== 'null' ? v.hours.split(' | ') : [];
+        const hoursHtml = hoursArr.length ? `<ul>${hoursArr.map(h => `<li>${h}</li>`).join('')}</ul>` : '<p>Hours not available.</p>';
+        document.getElementById('p-hours').innerHTML = hoursHtml;
+
+        // Navigation
+        const navBtn = document.querySelector('#detail-panel .btn-more');
+        if (navBtn) navBtn.setAttribute('onclick', `window.open('https://www.google.com/maps/search/?api=1&query=${v.lat},${v.lng}', '_blank')`);
+        
+        const distDiv = document.getElementById('p-distance');
+        if (typeof userLat !== 'undefined' && userLat !== null) {
+            const dist = haversineKm(userLat, userLng, v.lat, v.lng).toFixed(1);
+            distDiv.innerHTML = `<small>📍 ${dist} km from your location</small>`;
+            if (typeof getDriveTime === 'function') {
+                getDriveTime(v.lat, v.lng).then(mins => {
+                    if (mins) distDiv.innerHTML = `<small>📍 ${dist} km · ~${mins} min drive</small>`;
+                });
+            }
+        } else {
+            if (distDiv) distDiv.innerHTML = '';
         }
 
         document.getElementById('detail-panel').classList.add('active');
