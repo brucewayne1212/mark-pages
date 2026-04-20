@@ -17,11 +17,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
-.sidebar.collapsed {
-  transform: translateX(-340px);
-  opacity: 0;
-  pointer-events: none;
-}
+.sidebar.collapsed { transform: translateX(-340px); opacity: 0; pointer-events: none; }
 .toggle-btn {
   position: absolute; top: 10px; left: 10px; z-index: 1001;
   background: white; border: none; border-radius: 8px;
@@ -29,13 +25,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   font-size: 16px; display: none;
 }
-.sidebar.collapsed ~ .toggle-btn {
-  display: block;
-}
+.sidebar.collapsed ~ .toggle-btn { display: block; }
 .sidebar h2 { font-size: 16px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+.sidebar h3 { font-size: 13px; color: #666; margin-bottom: 12px; }
 .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; padding: 0 4px; line-height: 1; }
 .close-btn:hover { color: #333; }
-.sidebar h3 { font-size: 13px; color: #666; margin-bottom: 12px; }
 .day-group { margin-bottom: 12px; }
 .day-label { font-weight: 700; font-size: 13px; padding: 4px 8px; border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
 .day-label:hover { opacity: 0.85; }
@@ -44,6 +38,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #555; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.popup-link { display: inline-block; margin-top: 6px; padding: 4px 10px; background: #3498DB; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; }
+.popup-link:hover { background: #2980B9; }
 @media (max-width: 600px) {
   .sidebar { max-width: 260px; font-size: 12px; padding: 12px; }
 }
@@ -67,54 +63,43 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 <div id="map"></div>
 <script>
 const venues = [
-  // Accommodation
-  { id: "accommodation", name: "Casa Nanna Chic in Vatican", lat: 41.9104386, lng: 12.4538441, type: "accommodation", day: "Base", icon: "🏠", desc: "Via Andrea Doria 16, 00192 Roma" },
-
-  // Day 1 - Monday
-  { id: "vatican", name: "Vatican Museums & Sistine Chapel", lat: 41.9064878, lng: 12.4536413, type: "attraction", day: "Mon 25", icon: "🏛️", desc: "Already booked. Arrive 30 min early." },
-  { id: "st_peter", name: "St Peter's Basilica", lat: 41.9021667, lng: 12.4539367, type: "attraction", day: "Mon 25", icon: "⛪", desc: "Free entry. Climb the dome!" },
-  { id: "old_bridge", name: "Gelateria Old Bridge", lat: 41.9064049, lng: 12.4563677, type: "gelato", day: "Mon 25", icon: "🍦", desc: "Viale dei Bastioni di Michelangelo 5. Open till 12:30 AM." },
-  { id: "castroni", name: "Caffè Castroni", lat: 41.9073023, lng: 12.4631731, type: "bar", day: "Mon 25", icon: "🍺", desc: "Via Cola di Rienzo 196. Iconic deli & caffè." },
-  { id: "200gradi", name: "200 Gradi (cheaper dinner)", lat: 41.9064553, lng: 12.4565817, type: "restaurant", day: "Mon 25", icon: "🍕", desc: "Piazza del Risorgimento 3. Supplì & pizza. Open till 3 AM." },
-  { id: "arlu", name: "Ristorante Arlù (nicer dinner)", lat: 41.9039232, lng: 12.4593663, type: "restaurant", day: "Mon 25", icon: "🍽️", desc: "Borgo Pio 135. Spaghetti alle vongole, fritto misto." },
-
-  // Day 2 - Tuesday
-  { id: "pantheon", name: "Pantheon", lat: 41.8986108, lng: 12.4768729, type: "attraction", day: "Tue 26", icon: "🏛️", desc: "Pre-book €5 tickets. Daily 9 AM–7 PM." },
-  { id: "trevi", name: "Trevi Fountain", lat: 41.9009325, lng: 12.483313, type: "attraction", day: "Tue 26", icon: "⛲", desc: "Free. Throw a coin!" },
-  { id: "spanish_steps", name: "Spanish Steps", lat: 41.90599, lng: 12.482775, type: "attraction", day: "Tue 26", icon: "🪜", desc: "Free. Climb up for views." },
-  { id: "santeustachio", name: "Sant'Eustachio Caffè", lat: 41.8982749, lng: 12.4754254, type: "bar", day: "Tue 26", icon: "☕", desc: "Piazza S. Eustachio 82. Rome's most famous coffee." },
-  { id: "barnum", name: "Barnum Roma (cheaper lunch)", lat: 41.8970566, lng: 12.469997, type: "restaurant", day: "Tue 26", icon: "🥗", desc: "Via del Pellegrino 87. Salads, bowls, sandwiches." },
-  { id: "armando", name: "Armando al Pantheon (nicer lunch)", lat: 41.8990932, lng: 12.4762429, type: "restaurant", day: "Tue 26", icon: "🍝", desc: "Salita de' Crescenzi 31. Book ahead." },
-  { id: "giolitti", name: "Giolitti", lat: 41.9010245, lng: 12.4772026, type: "gelato", day: "Tue 26", icon: "🍦", desc: "Via degli Uffici del Vicario 40. Since 1900." },
-  { id: "villa_borghese", name: "Villa Borghese Gardens", lat: 41.9138782, lng: 12.4853818, type: "attraction", day: "Tue 26", icon: "🌳", desc: "REST AFTERNOON. Bikes, boats, shade." },
-  { id: "freni", name: "Freni e Frizioni", lat: 41.8913492, lng: 12.4707561, type: "bar", day: "Tue 26", icon: "🍹", desc: "Via del Politeama 4. Aperitivo spot." },
-  { id: "montecarlo", name: "Pizzeria La Montecarlo (cheaper)", lat: 41.897592, lng: 12.4707729, type: "restaurant", day: "Tue 26", icon: "🍕", desc: "Vicolo Savelli 13. Cash only. No bookings." },
-  { id: "tonnarello", name: "Tonnarello (nicer)", lat: 41.889804, lng: 12.4693004, type: "restaurant", day: "Tue 26", icon: "🍝", desc: "Via della Paglia 1. Queue early." },
-
-  // Day 3 - Wednesday
-  { id: "colosseum", name: "Colosseum", lat: 41.8902102, lng: 12.4922309, type: "attraction", day: "Wed 27", icon: "🏟️", desc: "BOOK NOW: ticketing.colosseo.it. Combined ticket." },
-  { id: "roman_forum", name: "Roman Forum", lat: 41.8920906, lng: 12.4864378, type: "attraction", day: "Wed 27", icon: "🏛️", desc: "Same ticket as Colosseum. 1.5–2 hours." },
-  { id: "palatine", name: "Palatine Hill", lat: 41.8886559, lng: 12.4875481, type: "attraction", day: "Wed 27", icon: "🏔️", desc: "Best views. Less crowded." },
-  { id: "luzzi", name: "Trattoria Luzzi (cheaper lunch)", lat: 41.8893098, lng: 12.4966286, type: "restaurant", day: "Wed 27", icon: "🍕", desc: "Via Celimontana 1. Opposite Colosseum. Outdoor seating." },
-  { id: "taverna", name: "La Taverna dei Fori Imperiali (nicer)", lat: 41.8940615, lng: 12.4884778, type: "restaurant", day: "Wed 27", icon: "🍝", desc: "Via Madonna dei Monti 9. Hidden garden." },
-  { id: "fatamorgana", name: "Fatamorgana Gelateria", lat: 41.8956656, lng: 12.4932505, type: "gelato", day: "Wed 27", icon: "🍦", desc: "Piazza degli Zingari 5. Creative flavours." },
-  { id: "drinkkong", name: "Drink Kong", lat: 41.8951585, lng: 12.497966, type: "bar", day: "Wed 27", icon: "🍸", desc: "Piazza S. Martino Ai Monti 8. Cool cocktail bar." },
-  { id: "remo", name: "Pizzeria Remo (cheaper dinner)", lat: 41.8809047, lng: 12.4754643, type: "restaurant", day: "Wed 27", icon: "🍕", desc: "Piazza S Maria Liberatrice 44. Cash only." },
-  { id: "flavio", name: "Flavio al Velavevodetto (nicer)", lat: 41.8765558, lng: 12.4760277, type: "restaurant", day: "Wed 27", icon: "🍽️", desc: "Via Monte Testaccio 97. Built into ancient amphorae hill." },
-
-  // Day 4 - Thursday (Beach)
-  { id: "ilcapanno", name: "Il Capanno Beach Club", lat: 41.7252316, lng: 12.2879118, type: "beach", day: "Thu 28", icon: "🏖️", desc: "Piazzale Magellano 41. Family-friendly. 4.1★" },
-  { id: "labicocca", name: "La Bicocca Beach Club", lat: 41.7074066, lng: 12.3329341, type: "beach", day: "Thu 28", icon: "🏖️", desc: "Lungomare Vespucci 80. Good restaurant on site." },
-  { id: "friggitoria", name: "La Friggitoria (cheaper lunch)", lat: 41.7323996, lng: 12.2767924, type: "restaurant", day: "Thu 28", icon: "🐟", desc: "Corso Duca di Genova 8a. Fried seafood street food." },
-  { id: "trailgrano", name: "Tra il Grano e il Mare (nicer)", lat: 41.7298551, lng: 12.2852275, type: "restaurant", day: "Thu 28", icon: "🍽️", desc: "Viale del Lido 43/b. Proper seafood restaurant." },
-  { id: "comeillatte", name: "Come il Latte Gelateria", lat: 41.9070945, lng: 12.4960538, type: "gelato", day: "Thu 28", icon: "🍦", desc: "Via Silvio Spaventa 24. Back in Rome after beach." },
-  { id: "daenzo", name: "Da Enzo al 29 (cheaper dinner)", lat: 41.8880847, lng: 12.4778554, type: "restaurant", day: "Thu 28", icon: "🍝", desc: "Via dei Vascellari 29. Cash only. Queue early." },
-  { id: "derbelli", name: "Osteria Der Belli (nicer)", lat: 41.8898728, lng: 12.4707929, type: "restaurant", day: "Thu 28", icon: "🍽️", desc: "Piazza Sant'Apollonia 11. Piazza setting." },
-
-  // Day 5 - Friday
-  { id: "tiber_island", name: "Tiber Island", lat: 41.8904524, lng: 12.4777395, type: "attraction", day: "Fri 29", icon: "🏝️", desc: "Quick stroll. Pretty bridges." },
-  { id: "bocca", name: "Bocca della Verità", lat: 41.8882378, lng: 12.4814441, type: "attraction", day: "Fri 29", icon: "👄", desc: "Free photo op. The girls will love it." },
-  { id: "circus_maximus", name: "Circus Maximus", lat: 41.8858762, lng: 12.4857578, type: "attraction", day: "Fri 29", icon: "🏟️", desc: "Wide open space. Final run-around." },
+  { id: "accommodation", name: "Casa Nanna Chic in Vatican", lat: 41.9104386, lng: 12.4538441, type: "accommodation", day: "Base", icon: "🏠", desc: "Via Andrea Doria 16, 00192 Roma", url: null },
+  { id: "vatican", name: "Vatican Museums & Sistine Chapel", lat: 41.9064878, lng: 12.4536413, type: "attraction", day: "Mon 25", icon: "🏛️", desc: "Already booked. Arrive 30 min early.", url: "https://www.museivaticani.va/" },
+  { id: "st_peter", name: "St Peter's Basilica", lat: 41.9021667, lng: 12.4539367, type: "attraction", day: "Mon 25", icon: "⛪", desc: "Free entry. Climb the dome!", url: "https://www.basilicasanpietro.va/" },
+  { id: "old_bridge", name: "Gelateria Old Bridge", lat: 41.9064049, lng: 12.4563677, type: "gelato", day: "Mon 25", icon: "🍦", desc: "Viale dei Bastioni di Michelangelo 5. Open till 12:30 AM.", url: "https://gelateriaoldbridge.com/" },
+  { id: "castroni", name: "Caffè Castroni", lat: 41.9073023, lng: 12.4631731, type: "bar", day: "Mon 25", icon: "🍺", desc: "Via Cola di Rienzo 196. Iconic deli & caffè.", url: "https://www.castronicoladirienzo.com/" },
+  { id: "200gradi", name: "200 Gradi (cheaper dinner)", lat: 41.9064553, lng: 12.4565817, type: "restaurant", day: "Mon 25", icon: "🍕", desc: "Piazza del Risorgimento 3. Supplì & pizza. Open till 3 AM.", url: "https://www.duecentogradi.com/" },
+  { id: "arlu", name: "Ristorante Arlù (nicer dinner)", lat: 41.9039232, lng: 12.4593663, type: "restaurant", day: "Mon 25", icon: "🍽️", desc: "Borgo Pio 135. Spaghetti alle vongole, fritto misto.", url: "http://www.ristorantearlu.it/" },
+  { id: "pantheon", name: "Pantheon", lat: 41.8986108, lng: 12.4768729, type: "attraction", day: "Tue 26", icon: "🏛️", desc: "Pre-book €5 tickets. Daily 9 AM–7 PM.", url: "https://direzionemuseiroma.cultura.gov.it/pantheon/" },
+  { id: "trevi", name: "Trevi Fountain", lat: 41.9009325, lng: 12.483313, type: "attraction", day: "Tue 26", icon: "⛲", desc: "Free. Throw a coin!", url: "https://fontanaditrevi.roma.it/" },
+  { id: "spanish_steps", name: "Spanish Steps", lat: 41.90599, lng: 12.482775, type: "attraction", day: "Tue 26", icon: "🪜", desc: "Free. Climb up for views.", url: null },
+  { id: "santeustachio", name: "Sant'Eustachio Caffè", lat: 41.8982749, lng: 12.4754254, type: "bar", day: "Tue 26", icon: "☕", desc: "Piazza S. Eustachio 82. Rome's most famous coffee.", url: "https://caffesanteustachio.com/" },
+  { id: "barnum", name: "Barnum Roma (cheaper lunch)", lat: 41.8970566, lng: 12.469997, type: "restaurant", day: "Tue 26", icon: "🥗", desc: "Via del Pellegrino 87. Salads, bowls, sandwiches.", url: "https://www.barnumroma.com/" },
+  { id: "armando", name: "Armando al Pantheon (nicer lunch)", lat: 41.8990932, lng: 12.4762429, type: "restaurant", day: "Tue 26", icon: "🍝", desc: "Salita de' Crescenzi 31. Book ahead.", url: "https://www.armandoalpantheon.it/" },
+  { id: "giolitti", name: "Giolitti", lat: 41.9010245, lng: 12.4772026, type: "gelato", day: "Tue 26", icon: "🍦", desc: "Via degli Uffici del Vicario 40. Since 1900.", url: "http://www.giolitti.it/" },
+  { id: "villa_borghese", name: "Villa Borghese Gardens", lat: 41.9138782, lng: 12.4853818, type: "attraction", day: "Tue 26", icon: "🌳", desc: "REST AFTERNOON. Bikes, boats, shade.", url: "https://www.sovraintendenzaroma.it/i_luoghi/ville_e_parchi_storici/ville_dei_nobili/villa_borghese" },
+  { id: "freni", name: "Freni e Frizioni", lat: 41.8913492, lng: 12.4707561, type: "bar", day: "Tue 26", icon: "🍹", desc: "Via del Politeama 4. Aperitivo spot.", url: null },
+  { id: "montecarlo", name: "Pizzeria La Montecarlo (cheaper)", lat: 41.897592, lng: 12.4707729, type: "restaurant", day: "Tue 26", icon: "🍕", desc: "Vicolo Savelli 13. Cash only. No bookings.", url: "https://www.lamontecarlo.it/" },
+  { id: "tonnarello", name: "Tonnarello (nicer)", lat: 41.889804, lng: 12.4693004, type: "restaurant", day: "Tue 26", icon: "🍝", desc: "Via della Paglia 1. Queue early.", url: "https://tonnarello.it/" },
+  { id: "colosseum", name: "Colosseum", lat: 41.8902102, lng: 12.4922309, type: "attraction", day: "Wed 27", icon: "🏟️", desc: "BOOK NOW: ticketing.colosseo.it. Combined ticket.", url: "https://ticketing.colosseo.it/" },
+  { id: "roman_forum", name: "Roman Forum", lat: 41.8920906, lng: 12.4864378, type: "attraction", day: "Wed 27", icon: "🏛️", desc: "Same ticket as Colosseum. 1.5–2 hours.", url: "https://colosseo.it/area/foro-romano/" },
+  { id: "palatine", name: "Palatine Hill", lat: 41.8886559, lng: 12.4875481, type: "attraction", day: "Wed 27", icon: "🏔️", desc: "Best views. Less crowded.", url: "https://ticketing.colosseo.it/" },
+  { id: "luzzi", name: "Trattoria Luzzi (cheaper lunch)", lat: 41.8893098, lng: 12.4966286, type: "restaurant", day: "Wed 27", icon: "🍕", desc: "Via Celimontana 1. Opposite Colosseum. Outdoor seating.", url: "https://www.trattorialuzzi.it/" },
+  { id: "taverna", name: "La Taverna dei Fori Imperiali (nicer)", lat: 41.8940615, lng: 12.4884778, type: "restaurant", day: "Wed 27", icon: "🍝", desc: "Via Madonna dei Monti 9. Hidden garden.", url: "https://www.latavernadeiforiimperiali.com/" },
+  { id: "fatamorgana", name: "Fatamorgana Gelateria", lat: 41.8956656, lng: 12.4932505, type: "gelato", day: "Wed 27", icon: "🍦", desc: "Piazza degli Zingari 5. Creative flavours.", url: "http://www.gelateriafatamorgana.com/" },
+  { id: "drinkkong", name: "Drink Kong", lat: 41.8951585, lng: 12.497966, type: "bar", day: "Wed 27", icon: "🍸", desc: "Piazza S. Martino Ai Monti 8. Cool cocktail bar.", url: "http://www.drinkkong.com/" },
+  { id: "remo", name: "Pizzeria Remo (cheaper dinner)", lat: 41.8809047, lng: 12.4754643, type: "restaurant", day: "Wed 27", icon: "🍕", desc: "Piazza S Maria Liberatrice 44. Cash only.", url: null },
+  { id: "flavio", name: "Flavio al Velavevodetto (nicer)", lat: 41.8765558, lng: 12.4760277, type: "restaurant", day: "Wed 27", icon: "🍽️", desc: "Via Monte Testaccio 97. Built into ancient amphorae hill.", url: "https://www.ristorantevelavevodetto.it/ristoranti/roma-testaccio/" },
+  { id: "ilcapanno", name: "Il Capanno Beach Club", lat: 41.7252316, lng: 12.2879118, type: "beach", day: "Thu 28", icon: "🏖️", desc: "Piazzale Magellano 41. Family-friendly. 4.1★", url: "https://www.capannobeachclub.it/" },
+  { id: "labicocca", name: "La Bicocca Beach Club", lat: 41.7074066, lng: 12.3329341, type: "beach", day: "Thu 28", icon: "🏖️", desc: "Lungomare Vespucci 80. Good restaurant on site.", url: "http://www.stabilimentolabicocca.it/" },
+  { id: "friggitoria", name: "La Friggitoria (cheaper lunch)", lat: 41.7323996, lng: 12.2767924, type: "restaurant", day: "Thu 28", icon: "🐟", desc: "Corso Duca di Genova 8a. Fried seafood street food.", url: "http://www.lafriggitoria.com/" },
+  { id: "trailgrano", name: "Tra il Grano e il Mare (nicer)", lat: 41.7298551, lng: 12.2852275, type: "restaurant", day: "Thu 28", icon: "🍽️", desc: "Viale del Lido 43/b. Proper seafood restaurant.", url: "http://www.ristorantetrailgranoeilmare.com/" },
+  { id: "comeillatte", name: "Come il Latte Gelateria", lat: 41.9070945, lng: 12.4960538, type: "gelato", day: "Thu 28", icon: "🍦", desc: "Via Silvio Spaventa 24. Back in Rome after beach.", url: null },
+  { id: "daenzo", name: "Da Enzo al 29 (cheaper dinner)", lat: 41.8880847, lng: 12.4778554, type: "restaurant", day: "Thu 28", icon: "🍝", desc: "Via dei Vascellari 29. Cash only. Queue early.", url: "http://www.daenzoal29.com/" },
+  { id: "derbelli", name: "Osteria Der Belli (nicer)", lat: 41.8898728, lng: 12.4707929, type: "restaurant", day: "Thu 28", icon: "🍽️", desc: "Piazza Sant'Apollonia 11. Piazza setting.", url: "https://ostepercaso.com/osteria-der-belli/" },
+  { id: "tiber_island", name: "Tiber Island", lat: 41.8904524, lng: 12.4777395, type: "attraction", day: "Fri 29", icon: "🏝️", desc: "Quick stroll. Pretty bridges.", url: null },
+  { id: "bocca", name: "Bocca della Verità", lat: 41.8882378, lng: 12.4814441, type: "attraction", day: "Fri 29", icon: "👄", desc: "Free photo op. The girls will love it.", url: null },
+  { id: "circus_maximus", name: "Circus Maximus", lat: 41.8858762, lng: 12.4857578, type: "attraction", day: "Fri 29", icon: "🏟️", desc: "Wide open space. Final run-around.", url: null },
 ];
 
 const colors = {
@@ -130,6 +115,7 @@ const dayColors = {
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('collapsed');
 }
+
 const map = L.map('map').setView([41.900, 12.480], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap'
@@ -140,16 +126,16 @@ const groups = {};
 
 venues.forEach(v => {
   const color = colors[v.type];
+  const linkHtml = v.url ? `<br><a href="${v.url}" target="_blank" class="popup-link">🌐 Visit website</a>` : '';
   const marker = L.circleMarker([v.lat, v.lng], {
     radius: v.type === 'accommodation' ? 10 : 7,
     fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.9
-  }).addTo(map).bindPopup(`<b>${v.icon} ${v.name}</b><br>${v.desc}<br><small style="color:#888">${v.day}</small>`);
+  }).addTo(map).bindPopup(`<b>${v.icon} ${v.name}</b><br>${v.desc}<br><small style="color:#888">${v.day}</small>${linkHtml}`);
   markers[v.id] = marker;
   if (!groups[v.day]) groups[v.day] = [];
   groups[v.day].push(v);
 });
 
-// Build sidebar
 const container = document.getElementById('sidebar-content');
 Object.keys(groups).sort((a, b) => {
   const order = ["Base","Mon 25","Tue 26","Wed 27","Thu 28","Fri 29"];
@@ -171,7 +157,7 @@ Object.keys(groups).sort((a, b) => {
     const venue = document.createElement('div');
     venue.className = 'venue';
     venue.textContent = `${v.icon} ${v.name}`;
-    venue.onclick = () => map.setView([v.lat, v.lng], 17), markers[v.id].openPopup();
+    venue.onclick = () => { map.setView([v.lat, v.lng], 17); markers[v.id].openPopup(); };
     div.appendChild(venue);
   });
   container.appendChild(div);
