@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rome Trip 2026 - Interactive Map</title>
+    <title>Roma 2026 - Interactive Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -217,10 +217,11 @@
 
 <div id="layout">
     <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
+    <button id="geo-btn" class="toggle-btn" style="left: 60px;" onclick="getUserLocation()" title="Show my location">📍</button>
     
     <div id="sidebar">
         <div class="sidebar-header">
-            <strong>Rome Trip 2026</strong>
+            <strong>Rome 2026</strong>
         </div>
         <div class="sidebar-content" id="sidebar-list">
             <!-- Groups dynamic -->
@@ -240,7 +241,7 @@
 
     <div id="detail-panel">
         <button class="panel-close" onclick="closePanel()">✕</button>
-        <img id="p-photo" class="detail-img" src="" alt="Venue Photo" onerror="this.onerror=null;this.src='https://www.openstreetmap.org/export/embed.html?bbox='+((parseFloat(this.dataset.lng)-0.002))+',+((parseFloat(this.dataset.lat)-0.001))+','+((parseFloat(this.dataset.lng)+0.002))+','+((parseFloat(this.dataset.lat)+0.001))+'onerror="this.style.display='none'layer=mapnikonerror="this.style.display='none'marker='+this.dataset.lat+','+this.dataset.lng">
+        <img id="p-photo" class="detail-img" src="" alt="Venue Photo" onerror="this.onerror=null;this.src='https://staticmap.openstreetmap.de/staticmap.php?center='+this.dataset.lat+','+this.dataset.lng+'&zoom=17&size=800x400&maptype=mapnik&markers='+this.dataset.lat+','+this.dataset.lng+',red-pushpin'">
         <div class="detail-body">
             <div id="p-title" class="detail-title"></div>
             <div id="p-rating" style="color: #f39c12; font-weight: bold; margin-bottom: 10px;"></div>
@@ -252,6 +253,8 @@
                 <h4>Opening Hours</h4>
                 <div id="p-hours"></div>
             </div>
+            <div id="p-distance" style="margin-top:12px;"></div>
+            <button class="btn-more" style="margin-top:8px;font-size:0.9em;" onclick="navigateTo('__venue_id__')">🧭 Open in Google Maps</button>
         </div>
     </div>
 </div>
@@ -400,6 +403,7 @@ derbelli|Osteria Der Belli (nicer)|41.8898728|12.4707929|restaurant|Thu 28|🍽�
         sidebarList.appendChild(groupDiv);
     });
 
+    // Initial fit to all venues
     if (venues.length > 0) {
         const allBounds = L.latLngBounds(venues.map(v => [v.lat, v.lng]));
         map.fitBounds(allBounds, { padding: [50, 50] });
@@ -447,11 +451,110 @@ derbelli|Osteria Der Belli (nicer)|41.8898728|12.4707929|restaurant|Thu 28|🍽�
             : '<p>Hours not available.</p>';
         document.getElementById('p-hours').innerHTML = hoursHtml;
 
+        // Distance & navigate button
+        const navBtn = document.querySelector('#detail-panel .btn-more');
+        if (navBtn) navBtn.setAttribute('onclick', `navigateTo('${v.id}')`);
+        const distDiv = document.getElementById('p-distance');
+        if (userLat !== null) {
+            const dist = haversineKm(userLat, userLng, v.lat, v.lng).toFixed(1);
+            distDiv.innerHTML = `<small>📍 ${dist} km from your location</small>`;
+            getDriveTime(v.lat, v.lng).then(mins => {
+                if (mins) distDiv.innerHTML = `<small>📍 ${dist} km · ~${mins} min drive</small>`;
+            });
+        } else {
+            distDiv.innerHTML = '';
+        }
+
         document.getElementById('detail-panel').classList.add('active');
     }
 
     function closePanel() {
         document.getElementById('detail-panel').classList.remove('active');
+    }
+
+    // ---- Geolocation & Routing ----
+    let userMarker = null;
+    let userLat = null, userLng = null;
+    const routeCache = {};
+
+    function getUserLocation() {
+        const btn = document.getElementById('geo-btn');
+        btn.textContent = '⏳';
+        btn.disabled = true;
+        if (!navigator.geolocation) {
+            btn.textContent = '❌';
+            btn.disabled = false;
+            alert('Geolocation not supported by your browser.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                userLat = pos.coords.latitude;
+                userLng = pos.coords.longitude;
+                if (userMarker) map.removeLayer(userMarker);
+                userMarker = L.circleMarker([userLat, userLng], {
+                    radius: 10, fillColor: '#4285F4', color: '#fff', weight: 3, opacity: 1, fillOpacity: 0.9
+                }).addTo(map).bindPopup('📍 You are here');
+                map.setView([userLat, userLng], 14);
+                btn.textContent = '📍';
+                btn.disabled = false;
+                updateAllDistances();
+            },
+            () => { btn.textContent = '❌'; btn.disabled = false; alert('Unable to get your location.'); },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+
+    function haversineKm(lat1, lng1, lat2, lng2) {
+        const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    async function getDriveTime(lat, lng) {
+        if (userLat === null) return null;
+        const key = `${userLat.toFixed(3)},${userLng.toFixed(3)}_${lat.toFixed(3)},${lng.toFixed(3)}`;
+        if (routeCache[key]) return routeCache[key];
+        try {
+            const resp = await fetch(`https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${lng},${lat}?overview=false`);
+            const data = await resp.json();
+            if (data.routes && data.routes[0]) {
+                const mins = Math.round(data.routes[0].duration / 60);
+                routeCache[key] = mins;
+                return mins;
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    async function updateAllDistances() {
+        if (userLat === null) return;
+        document.querySelectorAll('.venue-distance').forEach(el => el.remove());
+        for (const v of venues) {
+            const dist = haversineKm(userLat, userLng, v.lat, v.lng).toFixed(1);
+            const drive = await getDriveTime(v.lat, v.lng);
+            const info = drive ? `${dist} km · ${drive} min drive` : `${dist} km`;
+            const item = document.querySelector(`.venue-item`);
+            const items = document.querySelectorAll('.venue-item');
+            items.forEach(item => {
+                if (item.textContent.includes(v.name)) {
+                    let badge = item.querySelector('.venue-distance');
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'venue-distance';
+                        badge.style.cssText = 'margin-left:auto;font-size:0.75rem;color:#666;white-space:nowrap;';
+                        item.appendChild(badge);
+                    }
+                    badge.textContent = info;
+                }
+            });
+        }
+    }
+
+    function navigateTo(id) {
+        const v = venues.find(item => item.id === id);
+        if (!v) return;
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`, '_blank');
     }
 </script>
 
