@@ -293,6 +293,17 @@
   "fatamorgana": "https://lh3.googleusercontent.com/place-photos/AJRVUZNVXibpy5AEwSjJzZZQ93ZNw2lttcIIQqlXLo4uN5lDd4VVLOiKvP_JkS7i5OKhfBqDPyelXI10mIvstVST816z_M5BEhGUEoiNNN2zP1xYeW2BXyKtu_yvqrWPiep56lJdmXuCMHYXZBsE434=s4800-h400",
   "labicocca": "https://lh3.googleusercontent.com/place-photos/AJRVUZOeCJ0LgaowjlHsMsr7He2XF5Hwjc5V0pUI4TsjvCED4wjt7v_dqk1xb5Tb-DNVE4dRrgCwRnu2WmlMIPhejA_0EjyWe7H4smcKKiziQxrjDdd80SME4WerzW9021hHK6aKJNednkWVFjP4Mg=s4800-h400"
   };
+
+  const COFFEE_PHOTOS = {
+  "caffecomari": "img/caffecomari.jpg",
+  "artigiano": "img/artigiano.jpg",
+  "trecaffe": "img/trecaffe.jpg",
+  "mozart": "img/mozart.jpg",
+  "sciascia": "img/sciascia.jpg",
+  "antcandia": "img/antcandia.jpg",
+  "antcoria": "img/antcoria.jpg",
+  "coffeetime": "img/coffeetime.jpg"
+  };
     const rawData = `accommodation|Casa Nanna Chic in Vatican|41.9104386|12.4538441|accommodation|Base|🏠|Via Andrea Doria 16, 00192 Roma|null|null|null|Via Andrea Doria 16, 00192 Roma|null
 vatican|Vatican Museums & Sistine Chapel|41.9064878|12.4536413|attraction|Mon 25|🏛️|Already booked. Arrive 30 min early.|https://www.museivaticani.va/|places/ChIJKcGbg2NgLxMRthZkUqDs4M8/photos/AU_ZVEGJW0WO513Gs96vmYXmjPEZ7ImzyxJrLOfQT9r6VDYUL29iU73bcgaVHD96zlexlWkf7OdFhFe9a1bq4D4MN6sJI2ZTIPr-bDU2D3v9T82AOlI2Uj6rYIQ9zMUn5r8IfHawH2yPJbsAJHE7DJGi-jNNQZvQU1V0TRufx_iR9CY0YbkFmGsh7GTZNs5xX9hjxvajGG4B_a7jESqJmbpeNpfe6HeBj9gi6KijDmWi5QI7o7lJ9F8icVfY0HLkX9NCk9KCjy8cEHcJ45hf3T0iBDOrUPgq8m4DZSbiNh0e76W4mZRrlyAw-f2vQyhDx3R6NIe3vsERtpxCSXLso7Krub647-1bfT_T8Y87ctFS6Xh1_RnTURvD0WSbjTr0vdj8RP6XlMGT_EiYvs3U-Yb_TqhOMarezQnS0cnjxpd2JSdYEevP|4.6|00120, Vatican City|Mon-Sat 8AM-8PM, Sun Closed
 st_peter|St Peter's Basilica|41.9021667|12.4539367|attraction|Mon 25|⛪|Free entry. Climb the dome!|https://www.basilicasanpietro.va/|places/ChIJWZsUt2FgLxMRg1KHzXfwS3I/photos/AU_ZVEFwVHXfUsF-sROTtMSOSisbi-8EHgPookrwFQC-n718AqVSiKyIkBpPb4rQzVcP5CJoZPUTl_722YwxQSgxTjVHON3yreXza63dwrVIuinl2DxtXHAGPtdipbrB1HfIxv-xaqlo1H_kNghPBGt5nWbmefSAF25PbyxaFeCnLda7S836cfIEPRdLskWkjowYc64ilu1bC3E7HdicJ-ipN_XHqDvdrhhPkwowH37xRK5MUNJ_jKU6-JBHA1s0P2tbovt0UQRBYygL5B6Sgg5drKKNqlQxbc0a8LkdBa64k1QOlCdWZYvjmOaxinQpPptE-DcdG5D1MAFaPpeH42qwnJTZshfXP0LqAczIE-_ZM2rXFK_5FRTI5wYzj1QljQfnQZAygY767A9XYWJ61Gl4wP7VWVL4uh0G3RXBs6THrfn_C3Y|4.8|Piazza San Pietro, 00120 Città del Vaticano|Daily 7:00 AM – 7:10 PM
@@ -583,15 +594,14 @@ coffeetime|Coffee Time 49|41.90652|12.4462622|coffee|Base|☕|Via Cipro 49. ⭐4
         const img = document.getElementById('p-photo');
         img.dataset.lat = v.lat;
         img.dataset.lng = v.lng;
-        const photoUrl = PHOTOS[v.id];
+        const photoUrl = PHOTOS[v.id] || (typeof COFFEE_PHOTOS !== 'undefined' ? COFFEE_PHOTOS[v.id] : null);
         if (photoUrl) {
             img.src = photoUrl;
             img.style.display = 'block';
         } else {
-            // No photo — use static OSM map as fallback
             img.style.display = 'none';
         }
-        document.getElementById('p-photo').src = photoUrl;
+        document.getElementById('p-photo').src = photoUrl || '';
 
         const hoursHtml = v.hours !== 'null' 
             ? `<ul>${v.hours.split(', ').map(h => `<li>${h}</li>`).join('')}</ul>`
