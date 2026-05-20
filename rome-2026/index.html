@@ -346,16 +346,10 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
   "ChIJ1Y4tkLFhLxMR81tVajkUTb4": "https://lh3.googleusercontent.com/place-photos/AJRVUZNBagyinwp-753ZSfLPA1fRE1l3kzGb_Ul87bnwRxwieZx05wI9Ew92D2g1DvjrCjKuffYG7RS2NMocEx2VEZfBQGnbvBK67yt279ZInX977GwijhtFuRnN1Rb1tJ49RmVeGgeoRMCTRbuA9b1P7bef=s4800-h400"
 };
 
-    // Merge coffee venues into main venues for detail panel
-    const coffeeVenueObjects = (typeof coffeeData !== 'undefined') ? coffeeData.trim().split('\n').map(line => {
-        const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
-        return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
-    }) : [];
-
     const venues = rawData.trim().split('\n').map(line => {
         const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
         return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
-    }).concat(coffeeVenueObjects);
+    });
 
     const typeColors = {
         accommodation: 'purple',
@@ -426,7 +420,10 @@ coffeetime|Coffee Time 49|41.90652|12.4462622|coffee|Base|☕|Via Cipro 49. ⭐4
     const coffeeVenues = coffeeData.trim().split('\n').map(line => {
         const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
         return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
-    }).concat(coffeeVenueObjects);
+    });
+
+    // Add coffee venues to main venues array for detail panel support
+    venues.push(...coffeeVenues);
 
     const coffeeLayer = L.layerGroup();
     const coffeeMarkers = {};
