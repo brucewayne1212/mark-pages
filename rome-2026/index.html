@@ -234,6 +234,7 @@
             <div class="legend-item"><span class="dot" style="background: pink;"></span> Gelato</div>
             <div class="legend-item"><span class="dot" style="background: blue;"></span> Bar</div>
             <div class="legend-item"><span class="dot" style="background: green;"></span> Beach</div>
+            <div class="legend-item"><span class="dot" style="background: brown;"></span> ☕ Coffee</div>
         </div>
     </div>
 
@@ -345,10 +346,16 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
   "ChIJ1Y4tkLFhLxMR81tVajkUTb4": "https://lh3.googleusercontent.com/place-photos/AJRVUZNBagyinwp-753ZSfLPA1fRE1l3kzGb_Ul87bnwRxwieZx05wI9Ew92D2g1DvjrCjKuffYG7RS2NMocEx2VEZfBQGnbvBK67yt279ZInX977GwijhtFuRnN1Rb1tJ49RmVeGgeoRMCTRbuA9b1P7bef=s4800-h400"
 };
 
+    // Merge coffee venues into main venues for detail panel
+    const coffeeVenueObjects = (typeof coffeeData !== 'undefined') ? coffeeData.trim().split('\n').map(line => {
+        const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
+        return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
+    }) : [];
+
     const venues = rawData.trim().split('\n').map(line => {
         const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
         return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
-    });
+    }).concat(coffeeVenueObjects);
 
     const typeColors = {
         accommodation: 'purple',
@@ -356,7 +363,8 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
         restaurant: 'orange',
         gelato: 'pink',
         bar: 'blue',
-        beach: 'green'
+        beach: 'green',
+        coffee: 'brown'
     };
 
     const standard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
@@ -404,6 +412,50 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
         });
     }
 
+
+    // ---- Coffee / Espresso Layer ----
+    const coffeeData = `caffecomari|Caffè Delle Commari|41.908024|12.4540957|coffee|Base|☕|Via Santamaura 22. ⭐4.8 (14k reviews). Opens 6:30 MF, 7:00 Sun. Best all-rounder.|https://social.quandoo.com/en/groups/caffe-delle-comari-roma-92650|null|4.8|Via Santamaura 22, 00192 Roma|Mon-Fri 6:30 AM-10 PM, Sat 6:30 AM-10:30 PM, Sun 7:00 AM-10 PM
+artigiano|Artigiano Del Caffè|41.9098361|12.4555808|coffee|Base|☕|Via Famagosta 14. ⭐4.8. Artisan roastery. Opens 7:00 MF, 8:00 Sun. 2 min walk — closest!|https://artigianodelcaffe.it/|null|4.8|Via Famagosta 14, 00192 Roma|Mon-Sat 7:00 AM-4:00 PM, Sun 8:00 AM-1:00 PM
+trecaffe|Trecaffè Vaticano|41.9082158|12.4552257|coffee|Base|☕|Via Leone IV 10. ⭐4.6. Opens 7:00 MF, 7:30 Sun. 4 min walk.|http://www.trecaffe.it/|null|4.6|Via Leone IV 10, 00192 Roma|Mon-Sat 7:00 AM-4:00 PM, Sun 7:30 AM-3:00 PM
+mozart|Mozart Cafe|41.9088198|12.4587857|coffee|Base|☕|Via degli Scipioni 107. ⭐4.6. Opens 6:00 Daily. Good for pre-gym!|null|null|4.6|Via degli Scipioni 107, 00192 Roma|Daily 6:00 AM-9:00 PM
+sciascia|Sciascia Caffè 1919|41.909859|12.461994|coffee|Base|☕|Via Fabio Massimo 80. ⭐4.5. Historic (since 1919). Opens 7:00 Daily.|http://www.sciasciacaffe1919.it/|null|4.5|Via Fabio Massimo 80/a, 00192 Roma|Daily 7:00 AM-9:30 PM
+antcandia|Antico Caffè Candia|41.9072955|12.4501059|coffee|Base|☕|Via Candia 153. ⭐4.7. Opens 6:15 MF (closed Sun). Morning institution.|null|null|4.7|Via Candia 153, 00192 Roma|Mon-Sat 6:15 AM-1:30 PM, Sun Closed
+antcoria|Antico Caffè Doria|41.9089886|12.4499924|coffee|Base|☕|Via Andrea Doria 69/75. ⭐4.1. Opens 6:00 Daily. On your street!|null|null|4.1|Via Andrea Doria 69/75, 00192 Roma|Daily 6:00 AM-2:00 AM
+coffeetime|Coffee Time 49|41.90652|12.4462622|coffee|Base|☕|Via Cipro 49. ⭐4.8. Opens 7:00 Daily. Near Cipro metro.|null|null|4.8|Via Cipro 49, 00136 Roma|Mon-Fri 7:00 AM-7:00 PM, Sat 7:00 AM-6:00 PM, Sun 7:00 AM-3:00 PM`;
+
+    const coffeeVenues = coffeeData.trim().split('\n').map(line => {
+        const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
+        return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
+    }).concat(coffeeVenueObjects);
+
+    const coffeeLayer = L.layerGroup();
+    const coffeeMarkers = {};
+    
+    coffeeVenues.forEach(v => {
+        const color = '#6F4E37'; // coffee brown
+        const marker = L.circleMarker([v.lat, v.lng], {
+            radius: 8,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.85
+        });
+        
+        const popupContent = `
+            <div style="min-width: 200px;">
+                <strong>${v.icon} ${v.name}</strong><br>
+                <small>${v.desc}</small><br>
+                <button class="btn-more" onclick="openDetails('${v.id}')">More details →</button>
+            </div>
+        `;
+        marker.bindPopup(popupContent);
+        coffeeMarkers[v.id] = marker;
+        coffeeLayer.addLayer(marker);
+    });
+
+    // Add to overlay maps - insert before the L.control.layers call
+
     const overlayMaps = {
         "Rail & Tram Lines": railOverlay,
         "Nearby Affordable Dining": nearbyLayer
@@ -424,6 +476,34 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
 
     // Populate Sidebar and Markers
     const sidebarList = document.getElementById('sidebar-list');
+    
+    // Coffee section at top
+    const coffeeGroupDiv = document.createElement('div');
+    coffeeGroupDiv.className = 'day-group';
+    const coffeeHeader = document.createElement('div');
+    coffeeHeader.className = 'day-header';
+    coffeeHeader.style.background = '#F5E6D3';
+    coffeeHeader.innerHTML = '<span>☕ Morning Coffee</span> <span>🗺️</span>';
+    coffeeHeader.onclick = () => {
+        if (coffeeVenues.length > 0) {
+            const bounds = L.latLngBounds(coffeeVenues.map(v => [v.lat, v.lng]));
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    };
+    coffeeGroupDiv.appendChild(coffeeHeader);
+    
+    coffeeVenues.forEach(v => {
+        const item = document.createElement('div');
+        item.className = 'venue-item';
+        item.innerHTML = `<span>☕</span> ${v.name}`;
+        item.onclick = () => {
+            map.setView([v.lat, v.lng], 17);
+            if (coffeeMarkers[v.id]) coffeeMarkers[v.id].openPopup();
+            if (window.innerWidth < 600) toggleSidebar();
+        };
+        coffeeGroupDiv.appendChild(item);
+    });
+    sidebarList.appendChild(coffeeGroupDiv);
     
     Object.keys(dayGroups).forEach(day => {
         const groupDiv = document.createElement('div');
