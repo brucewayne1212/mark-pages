@@ -235,6 +235,7 @@
             <div class="legend-item"><span class="dot" style="background: blue;"></span> Bar</div>
             <div class="legend-item"><span class="dot" style="background: green;"></span> Beach</div>
             <div class="legend-item"><span class="dot" style="background: brown;"></span> ☕ Coffee</div>
+            <div class="legend-item"><span class="dot" style="background: #9B59B6;"></span> 🏛️ Classics Teacher Picks</div>
         </div>
     </div>
 
@@ -369,7 +370,8 @@ ChIJ1Y4tkLFhLxMR81tVajkUTb4|Caligola Osteria Sincera|41.9098922|12.4552179999999
         gelato: 'pink',
         bar: 'blue',
         beach: 'green',
-        coffee: 'brown'
+        coffee: 'brown',
+        classics: '#9B59B6'
     };
 
     const standard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
@@ -462,11 +464,60 @@ coffeetime|Coffee Time 49|41.90652|12.4462622|coffee|Base|☕|Via Cipro 49. ⭐4
         coffeeLayer.addLayer(marker);
     });
 
+
+    // ---- Classics Teacher Recommendations Layer ----
+    const classicsData = `dellapalma|Gelateria Della Palma|41.9005382|12.4765307|classics|Tips|🍦|150+ flavours! 3 mins from the Pantheon, Via della Maddalena.|https://www.dellapalma.it/|null|4.3|Via della Maddalena, 00186 Roma|Daily 10:00 AM - 1:30 AM
+pantheon_classics|Pantheon (Classics Tip)|41.8986108|12.4768729|classics|Tips|🏛️|Best preserved Roman temple. May need to book during main part of day. €5.|https://direzionemuseiroma.cultura.gov.it/pantheon/|null|4.8|Piazza della Rotonda, 00186 Roma|Daily 9:00 AM - 7:00 PM
+trajan_markets|Trajan's Markets|41.8956413|12.4862481|classics|Tips|🏛️|World's oldest shopping complex! 10 min from Colosseum, far fewer tourists. No booking needed.|http://www.mercatiditraiano.it/|null|4.6|Via IV Novembre 94, 00187 Roma|Tue-Sun 9:30 AM - 7:30 PM, Mon Closed
+ostia_antica|Ostia Antica|41.7564178|12.2932167|classics|Tips|🏛️|Pompeii without the tourists! Train from Piramide Metro (~30 min). Drops you right there.|https://www.ostiaantica.beniculturali.it/|null|4.7|Viale dei Romagnoli 717, 00119 Ostia Antica|Tue-Sun 8:30 AM - 7:15 PM, Mon Closed
+caracalla|Baths of Caracalla|41.8790382|12.4924394|classics|Tips|🏛️|Impressive ruined walls and vaults! 10 min from Circus Maximus.|https://www.turismoroma.it/it/luoghi/terme-di-caracalla|null|4.6|Viale delle Terme di Caracalla 52, 00153 Roma|Tue-Sun 9:00 AM - 6:15 PM, Mon Closed
+diocletian|Baths of Diocletian|41.9032158|12.4987538|classics|Tips|🏛️|Museum is OK, but FREE via Santa Maria degli Angeli church next door - the actual baths!|https://museonazionaleromano.it/|null|4.5|Via Ennio Quirino Visconti, 00186 Roma|Tue-Sun 9:00 AM - 7:15 PM
+capitoline|Capitoline Museums|41.8929428|12.4825577|classics|Tips|🏛️|Awesome collection, but very much a museum experience for kids.|https://www.museicapitolini.org/|null|4.7|Piazza del Campidoglio 1, 00186 Roma|Tue-Sun 9:30 AM - 7:30 PM, Mon Closed
+castel_santangelo|Castel Sant'Angelo|41.9030632|12.4662760|classics|Tips|🏰|Hadrian's mausoleum (2nd C AD) turned papal fortress. Near the Vatican.|http://castelsantangelo.beniculturali.it/|null|4.7|Lungotevere Castello 50, 00193 Roma|Tue-Sun 9:00 AM - 7:30 PM, Mon Closed
+spanish_steps|Spanish Steps & Shopping|41.9059900|12.4827750|classics|Tips|🛍️|Closest Rome gets to a main shopping street. Steps + Via del Corso area.|https://www.turismoroma.it/|null|4.6|Piazza di Spagna, 00187 Roma|24/7 outdoor
+suppli|Supplì Romani|41.8956656|12.4932505|classics|Tips|🍘|Deep fried rice croquettes with ragu & mozzarella. Roman street food - grab as takeaway!|null|null|4.4|Rome citywide|Daily
+trastevere_monti|Trastevere & Monti|41.8880847|12.4707929|classics|Tips|🍷|Trendy, lively areas for cheap eats (by UK standards). Monti near Colosseum.|null|null|4.5|Rome|Evenings best
+catacombs|Catacombs (Via Appia)|41.8589433|12.5107043|classics|Tips|⚰️|Several catacombs along Via Appia Antica. Need a bus. San Callisto is most famous.|http://www.catacombesancallisto.it/|null|4.6|Via Appia Antica 110, 00179 Roma|Thu-Tue 9:00 AM - 12:00 PM & 2:00 - 5:00 PM, Wed Closed`;
+
+    const classicsVenues = classicsData.trim().split('\n').map(line => {
+        const [id, name, lat, lng, type, day, icon, desc, url, photoName, rating, address, hours] = line.split('|');
+        return { id, name, lat: parseFloat(lat), lng: parseFloat(lng), type, day, icon, desc, url, photoName, rating, address, hours };
+    });
+
+    venues.push(...classicsVenues);
+
+    const classicsLayer = L.layerGroup();
+    const classicsMarkers = {};
+
+    classicsVenues.forEach(v => {
+        const color = '#9B59B6';
+        const marker = L.circleMarker([v.lat, v.lng], {
+            radius: 8,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.85
+        });
+
+        const popupContent = `
+            <div style="min-width: 200px;">
+                <strong>${v.icon} ${v.name}</strong><br>
+                <small>${v.desc}</small><br>
+                <button class="btn-more" onclick="openDetails('${v.id}')">More details →</button>
+            </div>
+        `;
+        marker.bindPopup(popupContent);
+        classicsMarkers[v.id] = marker;
+        classicsLayer.addLayer(marker);
+    });
+
     // Add to overlay maps - insert before the L.control.layers call
 
     const overlayMaps = {
         "Rail & Tram Lines": railOverlay,
-        "Nearby Affordable Dining": nearbyLayer
+        "Nearby Affordable Dining": nearbyLayer,
+        "🏛️ Classics Teacher Picks": classicsLayer
     };
 
 
@@ -513,6 +564,35 @@ coffeetime|Coffee Time 49|41.90652|12.4462622|coffee|Base|☕|Via Cipro 49. ⭐4
     });
     sidebarList.appendChild(coffeeGroupDiv);
     
+
+    // Classics Teacher section in sidebar
+    const classicsGroupDiv = document.createElement('div');
+    classicsGroupDiv.className = 'day-group';
+    const classicsHeader = document.createElement('div');
+    classicsHeader.className = 'day-header';
+    classicsHeader.style.background = '#E8D5F5';
+    classicsHeader.innerHTML = '<span>🏛️ Classics Teacher Picks</span> <span>🗺️</span>';
+    classicsHeader.onclick = () => {
+        if (classicsVenues.length > 0) {
+            const bounds = L.latLngBounds(classicsVenues.map(v => [v.lat, v.lng]));
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    };
+    classicsGroupDiv.appendChild(classicsHeader);
+
+    classicsVenues.forEach(v => {
+        const item = document.createElement('div');
+        item.className = 'venue-item';
+        item.innerHTML = `<span>${v.icon}</span> ${v.name}`;
+        item.onclick = () => {
+            map.setView([v.lat, v.lng], 16);
+            if (classicsMarkers[v.id]) classicsMarkers[v.id].openPopup();
+            if (window.innerWidth < 600) toggleSidebar();
+        };
+        classicsGroupDiv.appendChild(item);
+    });
+    sidebarList.appendChild(classicsGroupDiv);
+
     Object.keys(dayGroups).forEach(day => {
         const groupDiv = document.createElement('div');
         groupDiv.className = 'day-group';
