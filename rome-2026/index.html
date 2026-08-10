@@ -211,6 +211,43 @@
             #detail-panel { width: 100%; }
             #sidebar.collapsed { transform: translateX(-100%); }
         }
+    
+        /* Language Section Styles */
+        .sidebar-tabs { display: flex; border-bottom: 2px solid #ddd; }
+        .sidebar-tab {
+            flex: 1; padding: 12px 8px; text-align: center; cursor: pointer;
+            font-size: 0.9em; font-weight: 600; color: #666;
+            border-bottom: 3px solid transparent; transition: all 0.2s;
+        }
+        .sidebar-tab.active { color: #007bff; border-bottom-color: #007bff; }
+        .sidebar-tab:hover { background: #f0f4ff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .lang-category {
+            margin-bottom: 16px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
+        }
+        .lang-category-header {
+            padding: 12px 16px; background: #f8f9fa; cursor: pointer;
+            font-weight: 600; font-size: 0.95em; display: flex; justify-content: space-between; align-items: center;
+        }
+        .lang-category-header:hover { background: #eef1f5; }
+        .lang-category-header .arrow { transition: transform 0.2s; }
+        .lang-category-header.expanded .arrow { transform: rotate(90deg); }
+        .lang-items { display: none; padding: 0; }
+        .lang-items.expanded { display: block; }
+        .lang-item {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+            padding: 12px 16px; border-bottom: 1px solid #f0f0f0; align-items: center;
+        }
+        .lang-item:last-child { border-bottom: none; }
+        .lang-italian { font-size: 1.05em; color: #1a73e8; font-weight: 500; }
+        .lang-phonetic { color: #666; font-style: italic; font-size: 0.9em; }
+        .lang-english { color: #333; font-size: 0.9em; }
+        .lang-search {
+            width: 100%; padding: 10px 14px; margin-bottom: 12px;
+            border: 1px solid #ddd; border-radius: 8px; font-size: 0.95em; box-sizing: border-box;
+        }
+        .lang-search:focus { outline: none; border-color: #007bff; }
     </style>
 </head>
 <body>
@@ -223,8 +260,18 @@
         <div class="sidebar-header">
             <strong>Rome 2026</strong>
         </div>
+        <div class="sidebar-tabs">
+            <div class="sidebar-tab active" onclick="switchTab('map', this)">Map & Places</div>
+            <div class="sidebar-tab" onclick="switchTab('language', this)">Language</div>
+        </div>
+        <div id="tab-map" class="tab-content active">
         <div class="sidebar-content" id="sidebar-list">
             <!-- Groups dynamic -->
+        </div>
+        </div><!-- close tab-map -->
+        <div id="tab-language" class="tab-content">
+            <input type="text" class="lang-search" id="langSearch" placeholder="Search phrases..." oninput="filterItalianPhrases()">
+            <div id="italianLanguageContainer"></div>
         </div>
         <div id="legend">
             <strong>Legend</strong>
@@ -855,6 +902,120 @@ catacombs|Catacombs (Via Appia)|41.8589433|12.5107043|classics|Tips|⚰️|Sever
         if (!v) return;
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`, '_blank');
     }
+
+    // ===================== LANGUAGE (ITALIAN) =====================
+    var italianPhrases = [
+        {cat:'Greetings & Basics', it:'Buongiorno', phonetic:'bwon-JOR-noh', en:'Good morning'},
+        {cat:'Greetings & Basics', it:'Buonasera', phonetic:'bwoh-nah-SEH-rah', en:'Good evening'},
+        {cat:'Greetings & Basics', it:'Buonanotte', phonetic:'bwoh-nah-NOHT-teh', en:'Good night'},
+        {cat:'Greetings & Basics', it:'Ciao', phonetic:'chow', en:'Hi / Bye (informal)'},
+        {cat:'Greetings & Basics', it:'Salve', phonetic:'SAL-veh', en:'Hello (formal)'},
+        {cat:'Greetings & Basics', it:'Arrivederci', phonetic:'ah-ree-veh-DER-chee', en:'Goodbye (formal)'},
+        {cat:'Greetings & Basics', it:'Si\'', phonetic:'see', en:'Yes'},
+        {cat:'Greetings & Basics', it:'No', phonetic:'noh', en:'No'},
+        {cat:'Greetings & Basics', it:'Grazie', phonetic:'GRAH-tsyeh', en:'Thank you'},
+        {cat:'Greetings & Basics', it:'Prego', phonetic:'PREH-goh', en:"You're welcome / After you"},
+        {cat:'Greetings & Basics', it:'Per favore', phonetic:'pehr fah-VOH-reh', en:'Please'},
+        {cat:'Greetings & Basics', it:'Scusi', phonetic:'SKOO-zee', en:'Excuse me / Sorry'},
+        {cat:'Eating & Drinking', it:'Vorrei', phonetic:'vor-REH', en:'I would like'},
+        {cat:'Eating & Drinking', it:'Non voglio', phonetic:'non VOH-lyoh', en:"I don't want"},
+        {cat:'Eating & Drinking', it:'Il menu, per favore', phonetic:'eel meh-NOO, pehr fah-VOH-reh', en:'The menu, please'},
+        {cat:'Eating & Drinking', it:'Acqua', phonetic:'AHK-wah', en:'Water'},
+        {cat:'Eating & Drinking', it:'Acqua frizzante', phonetic:'AHK-wah frit-TSAHN-teh', en:'Sparkling water'},
+        {cat:'Eating & Drinking', it:'Birra', phonetic:'BEER-rah', en:'Beer'},
+        {cat:'Eating & Drinking', it:'Vino bianco', phonetic:'VEE-noh BYAN-koh', en:'White wine'},
+        {cat:'Eating & Drinking', it:'Vino rosso', phonetic:'VEE-noh ROH-soh', en:'Red wine'},
+        {cat:'Eating & Drinking', it:'Vino rosato', phonetic:'VEE-noh roh-ZAH-toh', en:'Rose wine'},
+        {cat:'Eating & Drinking', it:'Colazione', phonetic:'koh-lah-TSYOH-neh', en:'Breakfast'},
+        {cat:'Eating & Drinking', it:'Pranzo', phonetic:'PRAHN-tsoh', en:'Lunch'},
+        {cat:'Eating & Drinking', it:'Cena', phonetic:'CHEH-nah', en:'Dinner'},
+        {cat:'Eating & Drinking', it:'Pesce', phonetic:'PEH-sheh', en:'Fish'},
+        {cat:'Eating & Drinking', it:'Gamberi', phonetic:'GAHM-beh-ree', en:'Prawns / Shrimp'},
+        {cat:'Eating & Drinking', it:'Calamari', phonetic:'kah-lah-MAH-ri', en:'Calamari / Squid'},
+        {cat:'Eating & Drinking', it:'Insalata', phonetic:'een-sah-LAH-tah', en:'Salad'},
+        {cat:'Eating & Drinking', it:'Senza carne', phonetic:'SEHN-tzah KAR-neh', en:'Without meat'},
+        {cat:'Eating & Drinking', it:'Gelato', phonetic:'jeh-LAH-toh', en:'Ice cream'},
+        {cat:'Eating & Drinking', it:'Il conto, per favore', phonetic:'eel KON-toh, pehr fah-VOH-reh', en:'The bill, please'},
+        {cat:'Eating & Drinking', it:'Buonissimo', phonetic:'bwoh-NEES-see-moh', en:'Very delicious'},
+        {cat:'Eating & Drinking', it:'Un tavolo per quattro', phonetic:'oon TAH-voh-loh pehr kwah-TROH', en:'A table for four'},
+        {cat:'Getting Around', it:"Dov'e...", phonetic:'doh-VEH...', en:'Where is...?'},
+        {cat:'Getting Around', it:"Dov'e il bagno?", phonetic:'doh-VEH eel BAH-nyoh', en:'Where is the toilet?'},
+        {cat:'Getting Around', it:"L'hotel", phonetic:'loht-TEHL', en:'The hotel'},
+        {cat:'Getting Around', it:'La stazione', phonetic:'lah stah-tsyoh-NEH', en:'The station'},
+        {cat:'Getting Around', it:"L'aeroporto", phonetic:'lah-eh-roh-POR-toh', en:'The airport'},
+        {cat:'Getting Around', it:'A destra', phonetic:'ah DEH-strah', en:'On the right'},
+        {cat:'Getting Around', it:'A sinistra', phonetic:'ah see-NEES-trah', en:'On the left'},
+        {cat:'Getting Around', it:'Dritto', phonetic:'DREET-toh', en:'Straight ahead'},
+        {cat:'Getting Around', it:'Quanto costa?', phonetic:'KWAHN-toh KOH-stah', en:'How much is it?'},
+        {cat:'Getting Around', it:'Quanto dista?', phonetic:'KWAHN-toh DEES-tah', en:'How far is it?'},
+        {cat:'Getting Around', it:'Taxi', phonetic:'TAK-see', en:'Taxi'},
+        {cat:'Getting Around', it:'Autobus', phonetic:'ow-TOH-boos', en:'Bus'},
+        {cat:'Getting Around', it:'Biglietto', phonetic:'bee-LYET-toh', en:'Ticket'},
+        {cat:'Numbers & Money', it:'Uno', phonetic:'OO-noh', en:'One'},
+        {cat:'Numbers & Money', it:'Due', phonetic:'DOO-eh', en:'Two'},
+        {cat:'Numbers & Money', it:'Tre', phonetic:'treh', en:'Three'},
+        {cat:'Numbers & Money', it:'Quattro', phonetic:'KWAHT-troh', en:'Four'},
+        {cat:'Numbers & Money', it:'Cinque', phonetic:'CHEEN-kweh', en:'Five'},
+        {cat:'Numbers & Money', it:'Euro', phonetic:'EHW-roh', en:'Euro (currency)'},
+        {cat:'Family & Kids', it:'La famiglia', phonetic:'lah fah-MEEG-lyah', en:'The family'},
+        {cat:'Family & Kids', it:'Bambini', phonetic:'bahm-BEE-nee', en:'Children'},
+        {cat:'Family & Kids', it:'Bambina', phonetic:'bahm-BEE-nah', en:'Girl'},
+        {cat:'Family & Kids', it:'Bambino', phonetic:'bahm-BEE-noh', en:'Boy'},
+        {cat:'Emergencies', it:'Aiuto!', phonetic:'ay-YOO-toh', en:'Help!'},
+        {cat:'Emergencies', it:'Ho bisogno di un medico', phonetic:'oh bee-ZOH-nyoh dee oon MEH-dee-koh', en:'I need a doctor'},
+        {cat:'Emergencies', it:'Chiami la polizia', phonetic:'KYAH-mee lah poh-lee-TSEE-ah', en:'Call the police'},
+        {cat:'Emergencies', it:'Ospedale', phonetic:'oh-speh-DAH-leh', en:'Hospital'},
+    ];
+
+    function switchTab(tab, el) {
+        document.querySelectorAll('.sidebar-tab').forEach(function(t){t.classList.remove('active');});
+        document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active');});
+        el.classList.add('active');
+        document.getElementById('tab-'+tab).classList.add('active');
+    }
+
+    function renderItalianPhrases(filter) {
+        filter = (filter || '').toLowerCase();
+        var container = document.getElementById('italianLanguageContainer');
+        var categories = {};
+        italianPhrases.forEach(function(p) {
+            if (filter && p.en.toLowerCase().indexOf(filter) < 0 &&
+                p.it.toLowerCase().indexOf(filter) < 0 &&
+                p.phonetic.toLowerCase().indexOf(filter) < 0 &&
+                p.cat.toLowerCase().indexOf(filter) < 0) return;
+            if (!categories[p.cat]) categories[p.cat] = [];
+            categories[p.cat].push(p);
+        });
+        var html = '';
+        for (var cat in categories) {
+            html += '<div class="lang-category">';
+            html += '<div class="lang-category-header" onclick="toggleItalianCategory(this)"><span>' + cat + '</span><span class="arrow">&#9654;</span></div>';
+            html += '<div class="lang-items expanded">';
+            categories[cat].forEach(function(p) {
+                html += '<div class="lang-item">' +
+                    '<div class="lang-italian">' + p.it + '</div>' +
+                    '<div class="lang-phonetic">' + p.phonetic + '</div>' +
+                    '<div class="lang-english">' + p.en + '</div>' +
+                    '</div>';
+            });
+            html += '</div></div>';
+        }
+        if (html === '') html = '<p style="padding:20px;color:#999;">No phrases found.</p>';
+        container.innerHTML = html;
+    }
+
+    function toggleItalianCategory(header) {
+        var items = header.nextElementSibling;
+        header.classList.toggle('expanded');
+        items.classList.toggle('expanded');
+    }
+
+    function filterItalianPhrases() {
+        renderItalianPhrases(document.getElementById('langSearch').value);
+    }
+
+    renderItalianPhrases();
+
 </script>
 
 </body>
