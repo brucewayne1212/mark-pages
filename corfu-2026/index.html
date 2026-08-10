@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corfu 2026 - Interactive Guide</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --sidebar-width: 340px;
+            --panel-width: 400px;
+            --primary-bg: #ffffff;
+            --accent-color: #007bff;
+            --text-main: #333;
+            --text-muted: #666;
+            --shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #layout { display: flex; height: 100%; width: 100%; position: relative; }
+
+        #sidebar {
+            width: var(--sidebar-width); height: 100%;
+            background: var(--primary-bg); border-right: 1px solid #ddd;
+            display: flex; flex-direction: column;
+            transition: transform 0.3s ease; z-index: 1001; overflow-y: auto;
+        }
+        #sidebar.collapsed { transform: translateX(-100%); }
+
+        .sidebar-header {
+            padding: 16px; background: #f8f9fa; border-bottom: 1px solid #ddd;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .sidebar-tabs {
+            display: flex; border-bottom: 2px solid #ddd;
+        }
+        .sidebar-tab {
+            flex: 1; padding: 12px 8px; text-align: center; cursor: pointer;
+            font-size: 0.9em; font-weight: 600; color: #666;
+            border-bottom: 3px solid transparent; transition: all 0.2s;
+        }
+        .sidebar-tab.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
+        .sidebar-tab:hover { background: #f0f4ff; }
+
+        .tab-content { display: none; padding: 10px; }
+        .tab-content.active { display: block; }
+
+        .day-group { margin-bottom: 20px; }
+        .day-header {
+            font-weight: bold; padding: 8px; background: #eee; border-radius: 4px;
+            cursor: pointer; margin-bottom: 8px; display: flex; justify-content: space-between;
+        }
+        .day-header:hover { background: #e0e0e0; }
+
+        .venue-item {
+            padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+            font-size: 0.9em; display: flex; align-items: center;
+        }
+        .venue-item:hover { background: #f9f9f9; }
+        .venue-item span { margin-right: 8px; }
+
+        #map { flex: 1; height: 100%; z-index: 1; }
+
+        #detail-panel {
+            position: absolute; top: 0; right: -100%;
+            width: var(--panel-width); height: 100%; background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.2); z-index: 2000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto; display: flex; flex-direction: column;
+        }
+        #detail-panel.active { right: 0; }
+
+        .panel-close {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(255,255,255,0.8); border: none;
+            width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+            font-size: 20px; display: flex; align-items: center; justify-content: center;
+            z-index: 2001; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .detail-img { width: 100%; height: 250px; object-fit: cover; background: #eee; }
+        .detail-body { padding: 20px; }
+        .detail-title { font-size: 1.5em; font-weight: bold; margin-bottom: 10px; }
+        .detail-meta { margin-bottom: 15px; color: var(--text-muted); font-size: 0.95em; }
+
+        .toggle-btn {
+            position: absolute; top: 10px; left: 10px; z-index: 1002;
+            background: white; border: 1px solid #ccc; padding: 8px;
+            border-radius: 4px; cursor: pointer; box-shadow: var(--shadow);
+        }
+
+        #legend {
+            position: absolute; bottom: 20px; right: 20px; z-index: 1000;
+            background: white; padding: 12px; border-radius: 8px;
+            box-shadow: var(--shadow); font-size: 0.85em;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 4px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; display: inline-block; }
+
+        /* Language Section Styles */
+        .lang-section { padding: 0; }
+        .lang-category {
+            margin-bottom: 16px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
+        }
+        .lang-category-header {
+            padding: 12px 16px; background: #f8f9fa; cursor: pointer;
+            font-weight: 600; font-size: 0.95em; display: flex; justify-content: space-between; align-items: center;
+        }
+        .lang-category-header:hover { background: #eef1f5; }
+        .lang-category-header .arrow { transition: transform 0.2s; }
+        .lang-category-header.expanded .arrow { transform: rotate(90deg); }
+
+        .lang-items { display: none; padding: 0; }
+        .lang-items.expanded { display: block; }
+
+        .lang-item {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+            padding: 12px 16px; border-bottom: 1px solid #f0f0f0; align-items: center;
+        }
+        .lang-item:last-child { border-bottom: none; }
+        .lang-greek { font-size: 1.05em; color: #1a73e8; font-weight: 500; }
+        .lang-phonetic { color: #666; font-style: italic; font-size: 0.9em; }
+        .lang-english { color: #333; font-size: 0.9em; }
+
+        .lang-search {
+            width: 100%; padding: 10px 14px; margin-bottom: 12px;
+            border: 1px solid #ddd; border-radius: 8px; font-size: 0.95em; box-sizing: border-box;
+        }
+        .lang-search:focus { outline: none; border-color: var(--accent-color); }
+
+        .lang-flag { font-size: 1.3em; }
+
+        @media (max-width: 768px) {
+            #sidebar { width: 100%; }
+            #detail-panel { width: 100%; }
+            .lang-item { grid-template-columns: 1fr; gap: 2px; }
+        }
+    </style>
+</head>
+<body>
+<div id="layout">
+    <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2 style="margin:0;font-size:1.3em;">🇬🇷 Corfu 2026</h2>
+            <button onclick="toggleSidebar()" style="border:none;background:none;font-size:1.5em;cursor:pointer;">×</button>
+        </div>
+        <div class="sidebar-tabs">
+            <div class="sidebar-tab active" onclick="switchTab('map')">📍 Map & Places</div>
+            <div class="sidebar-tab" onclick="switchTab('language')">🗣️ Language</div>
+        </div>
+
+        <!-- MAP TAB -->
+        <div id="tab-map" class="tab-content active">
+            <div class="day-group">
+                <div class="day-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                    🏨 Accommodation <span>▾</span>
+                </div>
+                <div>
+                    <div class="venue-item" onclick="showDetail('hotel')">
+                        <span>🏨</span> Three Stars Beach Hotel, Moraitika
+                    </div>
+                </div>
+            </div>
+            <div class="day-group">
+                <div class="day-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                    🍽️ Restaurants <span>▾</span>
+                </div>
+                <div>
+                    <div class="venue-item" onclick="showDetail('r1')"><span>🐟</span> Taverna Agios Georgios</div>
+                    <div class="venue-item" onclick="showDetail('r2')"><span>🫒</span> The Olivar</div>
+                    <div class="venue-item" onclick="showDetail('r3')"><span>🐙</span> Taverna Giorgos</div>
+                    <div class="venue-item" onclick="showDetail('r4')"><span>🍋</span> Lemon Garden Restaurant</div>
+                </div>
+            </div>
+            <div class="day-group">
+                <div class="day-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                    🎯 Attractions <span>▾</span>
+                </div>
+                <div>
+                    <div class="venue-item" onclick="showDetail('a1')"><span>🏊</span> Aqualand Corfu</div>
+                    <div class="venue-item" onclick="showDetail('a2')"><span>🏰</span> Corfu Old Town</div>
+                    <div class="venue-item" onclick="showDetail('a3')"><span>🏛️</span> Achilleion Palace</div>
+                    <div class="venue-item" onclick="showDetail('a4')"><span> viewpoints</span> Mount Pantokrator</div>
+                </div>
+            </div>
+            <div class="day-group">
+                <div class="day-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                    🏖️ Beaches <span>▾</span>
+                </div>
+                <div>
+                    <div class="venue-item" onclick="showDetail('b1')"><span>🏖️</span> Moraitika Beach</div>
+                    <div class="venue-item" onclick="showDetail('b2')"><span>🏖️</span> Issos Beach</div>
+                    <div class="venue-item" onclick="showDetail('b3')"><span>🏖️</span> Glyfada Beach</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LANGUAGE TAB -->
+        <div id="tab-language" class="tab-content">
+            <div class="lang-section">
+                <input type="text" class="lang-search" id="langSearch" placeholder="🔍 Search phrases..." oninput="filterPhrases()">
+                <div id="languageContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="detail-panel">
+        <button class="panel-close" onclick="closeDetail()">×</button>
+        <img class="detail-img" id="detail-img" src="" alt="" onerror="this.style.display='none'">
+        <div class="detail-body">
+            <div class="detail-title" id="detail-title"></div>
+            <div class="detail-meta" id="detail-meta"></div>
+            <div id="detail-desc"></div>
+            <div class="detail-hours" id="detail-hours" style="display:none;">
+                <h4>Opening Hours</h4>
+                <ul id="detail-hours-list"></ul>
+            </div>
+            <br>
+            <a href="#" id="detail-maps" class="btn-more" target="_blank" style="display:none;">📍 View on Google Maps</a>
+        </div>
+    </div>
+
+    <div id="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span> Accommodation</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> Attraction</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f39c12;"></span> Restaurant</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#3498db;"></span> Beach</div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ===================== MAP =====================
+var map = L.map('map').setView([39.55, 19.90], 11);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap', maxZoom: 19
+}).addTo(map);
+
+var venues = [
+    {id:'hotel', name:'Three Stars Beach Hotel', lat:39.4760, lng:19.9200, type:'hotel',
+     addr:'Moraitika, Corfu 49084', desc:'Your accommodation. Family-friendly beachfront hotel in Moraitika. Pool, restaurant, bar. Annual holiday base.',
+     hours:null, maps:'https://maps.google.com/?q=Three+Stars+Beach+Hotel+Moraitika+Corfu'},
+
+    {id:'r1', name:'Taverna Agios Georgios', lat:39.4755, lng:19.9075, type:'restaurant',
+     addr:'Agios Georgios, Moraitika', desc:'Traditional Greek taverna with fresh seafood. Try the grilled octopus and Greek salad.',
+     hours:null, maps:'https://maps.google.com/?q=Taverna+Agios+Georgios+Moraitika+Corfu'},
+
+    {id:'r2', name:'The Olivar', lat:39.6243, lng:19.9217, type:'restaurant',
+     addr:'Corfu Town', desc:'Upscale Mediterranean restaurant in Corfu Town. Excellent pescatarian options.',
+     hours:null, maps:'https://maps.google.com/?q=The+Olivar+Corfu+Town'},
+
+    {id:'r3', name:'Taverna Giorgos', lat:39.4780, lng:19.9150, type:'restaurant',
+     addr:'Moraitika Main Road', desc:'Family-run taverna, generous portions, great value. Fresh fish daily.',
+     hours:null, maps:'https://maps.google.com/?q=Taverna+Giorgos+Moraitika+Corfu'},
+
+    {id:'r4', name:'Lemon Garden Restaurant', lat:39.4800, lng:19.9120, type:'restaurant',
+     addr:'Moraitika', desc:'Garden setting, Greek and international cuisine. Good vegetarian options.',
+     hours:null, maps:'https://maps.google.com/?q=Lemon+Garden+Restaurant+Moraitika+Corfu'},
+
+    {id:'a1', name:'Aqualand Corfu', lat:39.6089, lng:19.8461, type:'attraction',
+     addr:'Agios Ioannis, Corfu 49100', desc:'Water park with slides, pools, and activities for all ages. Buy tickets by 4:30 PM the day before for discount! Pizza available at catering stands.',
+     hours:['Open daily 10:00 - 18:00 (May-Oct)'], maps:'https://maps.google.com/?q=Aqualand+Corfu'},
+
+    {id:'a2', name:'Corfu Old Town (UNESCO)', lat:39.6243, lng:19.9217, type:'attraction',
+     addr:'Corfu Town', desc:'UNESCO World Heritage site. Venetian architecture, narrow streets, Liston promenade, Spianada Square. Great for wandering.',
+     hours:null, maps:'https://maps.google.com/?q=Corfu+Old+Town'},
+
+    {id:'a3', name:'Achilleion Palace', lat:39.5543, lng:19.9015, type:'attraction',
+     addr:'Gastouri, Corfu 49100', desc:'19th-century palace built by Empress Elisabeth of Austria. Beautiful gardens and statues.',
+     hours:['Open daily 08:00 - 20:00'], maps:'https://maps.google.com/?q=Achilleion+Palace+Corfu'},
+
+    {id:'a4', name:'Mount Pantokrator', lat:39.7620, lng:19.8420, type:'attraction',
+     addr:'Pantokrator, Corfu', desc:'Highest point on Corfu (906m). Stunning panoramic views of the island, Albania, and sometimes Italy on clear days.',
+     hours:null, maps:'https://maps.google.com/?q=Mount+Pantokrator+Corfu'},
+
+    {id:'b1', name:'Moraitika Beach', lat:39.4750, lng:19.9220, type:'beach',
+     addr:'Moraitika', desc:'Sandy/pebble beach right by the hotel. Sunbeds available. Shallow water good for kids.',
+     hours:null, maps:'https://maps.google.com/?q=Moraitika+Beach+Corfu'},
+
+    {id:'b2', name:'Issos Beach', lat:39.4380, lng:19.8950, type:'beach',
+     addr:'Issos, Corfu', desc:'Long sandy beach with dunes. Less developed, great for a quieter day. About 15 min drive south.',
+     hours:null, maps:'https://maps.google.com/?q=Issos+Beach+Corfu'},
+
+    {id:'b3', name:'Glyfada Beach', lat:39.6050, lng:19.8670, type:'beach',
+     addr:'Glyfada, Corfu', desc:'Popular sandy beach on the west coast. Beach bars, water sports. About 25 min drive.',
+     hours:null, maps:'https://maps.google.com/?q=Glyfada+Beach+Corfu'}
+];
+
+var typeColors = {hotel:'#2ecc71', attraction:'#e74c3c', restaurant:'#f39c12', beach:'#3498db'};
+var typeIcons = {hotel:'🏨', attraction:'🎯', restaurant:'🍽️', beach:'🏖️'};
+
+venues.forEach(function(v) {
+    var icon = L.divIcon({className:'custom-div-icon', html:
+        '<div style="background:'+typeColors[v.type]+';width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);">' +
+        '<span style="transform:rotate(45deg);font-size:14px;">'+typeIcons[v.type]+'</span></div>',
+        iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30]});
+
+    L.marker([v.lat, v.lng], {icon:icon}).addTo(map)
+        .on('click', function() { showDetail(v.id); });
+});
+
+function showDetail(id) {
+    var v = venues.find(function(x){return x.id===id;});
+    if (!v) return;
+    document.getElementById('detail-img').style.display = 'none';
+    document.getElementById('detail-title').innerHTML = typeIcons[v.type] + ' ' + v.name;
+    document.getElementById('detail-meta').innerHTML = '📍 ' + v.addr;
+    document.getElementById('detail-desc').innerHTML = '<p>' + v.desc + '</p>';
+
+    var hrs = document.getElementById('detail-hours');
+    var hrsList = document.getElementById('detail-hours-list');
+    if (v.hours) {
+        hrs.style.display = 'block';
+        hrsList.innerHTML = v.hours.map(function(h){return '<li>'+h+'</li>';}).join('');
+    } else { hrs.style.display = 'none'; }
+
+    var mapsLink = document.getElementById('detail-maps');
+    if (v.maps) { mapsLink.href = v.maps; mapsLink.style.display = 'inline-block'; }
+    else { mapsLink.style.display = 'none'; }
+
+    document.getElementById('detail-panel').classList.add('active');
+}
+
+function closeDetail() { document.getElementById('detail-panel').classList.remove('active'); }
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+function switchTab(tab) {
+    document.querySelectorAll('.sidebar-tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active');});
+    event.target.classList.add('active');
+    document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ===================== LANGUAGE =====================
+var phrases = [
+    // Greetings
+    {cat:'Greetings & Basics', greek:'Γεια σας', phonetic:'YAH-sas', english:'Hello (formal/plural)'},
+    {cat:'Greetings & Basics', greek:'Γεια', phonetic:'YAH', english:'Hi (informal)'},
+    {cat:'Greetings & Basics', greek:'Καλημέρα', phonetic:'kah-lee-MEH-rah', english:'Good morning'},
+    {cat:'Greetings & Basics', greek:'Καλησπέρα', phonetic:'kah-lee-SPEH-rah', english:'Good evening'},
+    {cat:'Greetings & Basics', greek:'Καληνύχτα', phonetic:'kah-lee-NEEKH-tah', english:'Good night'},
+    {cat:'Greetings & Basics', greek:'Αντίο', phonetic:'ahn-DEE-oh', english:'Goodbye'},
+    {cat:'Greetings & Basics', greek:'Ναι', phonetic:'neh', english:'Yes'},
+    {cat:'Greetings & Basics', greek:'Όχι', phonetic:'OH-khee', english:'No'},
+    {cat:'Greetings & Basics', greek:'Ευχαριστώ', phonetic:'eff-khah-ree-STOH', english:'Thank you'},
+    {cat:'Greetings & Basics', greek:'Παρακαλώ', phonetic:'pah-rah-kah-LOH', english:'Please / You\'re welcome'},
+    {cat:'Greetings & Basics', greek:'Συγγνώμη', phonetic:'seeg-NOH-mee', english:'Excuse me / Sorry'},
+
+    // Eating & Drinking
+    {cat:'Eating & Drinking', greek:'Θέλω', phonetic:'THEH-loh', english:'I want / I would like'},
+    {cat:'Eating & Drinking', greek:'Δεν θέλω', phonetic:'den THEH-loh', english:'I don\'t want'},
+    {cat:'Eating & Drinking', greek:'Το μενού, παρακαλώ', phonetic:'toh meh-NOO, pah-rah-kah-LOH', english:'The menu, please'},
+    {cat:'Eating & Drinking', greek:'Νερό', phonetic:'neh-ROH', english:'Water'},
+    {cat:'Eating & Drinking', greek:'Νερό με αναβράζοντας', phonetic:'neh-ROH meh ah-nah-vrah-ZAHN-das', english:'Sparkling water'},
+    {cat:'Eating & Drinking', greek:'Μπύρα', phonetic:'BEE-rah', english:'Beer'},
+    {cat:'Eating & Drinking', greek:'Κρασί λευκό', phonetic:'krah-SEE lef-KOH', english:'White wine'},
+    {cat:'Eating & Drinking', greek:'Κρασί κόκκινο', phonetic:'krah-SEE KOH-kee-noh', english:'Red wine'},
+    {cat:'Eating & Drinking', greek:'Κρασί ροζέ', phonetic:'krah-SEE roh-ZEH', english:'Rosé wine'},
+    {cat:'Eating & Drinking', greek:'Πρωινό', phonetic:'proh-ee-NOH', english:'Breakfast'},
+    {cat:'Eating & Drinking', greek:'Μεσημεριανό', phonetic:'meh-see-meh-ryah-NOH', english:'Lunch'},
+    {cat:'Eating & Drinking', greek:'Δείπνο', phonetic:'DHEEP-noh', english:'Dinner'},
+    {cat:'Eating & Drinking', greek:'Ψάρι', phonetic:'PSAH-ree', english:'Fish'},
+    {cat:'Eating & Drinking', greek:'Γαρίδες', phonetic:'gah-REE-thez', english:'Prawns / Shrimp'},
+    {cat:'Eating & Drinking', greek:'Χταπόδι', phonetic:'khtah-POH-thee', english:'Octopus'},
+    {cat:'Eating & Drinking', greek:'Καλαμάρι', phonetic:'kah-lah-MAH-ree', english:'Calamari / Squid'},
+    {cat:'Eating & Drinking', greek:'Ελληνική σαλάτα', phonetic:'eh-lee-nee-KEE sah-LAH-tah', english:'Greek salad'},
+    {cat:'Eating & Drinking', greek:'Τζατζίκι', phonetic:'TZAHT-zee-kee', english:'Tzatziki'},
+    {cat:'Eating & Drinking', greek:'Χωρίς κρέας', phonetic:'kho-REES KREH-as', english:'Without meat'},
+    {cat:'Eating & Drinking', greek:'Πάγωτο', phonetic:'PAH-gho-toh', english:'Ice cream'},
+    {cat:'Eating & Drinking', greek:'Ο λογαριασμός, παρακαλώ', phonetic:'oh loh-gah-ryahz-MOS, pah-rah-kah-LOH', english:'The bill, please'},
+    {cat:'Eating & Drinking', greek:'Φαγητό', phonetic:'fay-ee-TOH', english:'Food'},
+    {cat:'Eating & Drinking', greek:'Πολύ νόστιμο', phonetic:'poh-LEE NOH-stee-moh', english:'Very delicious'},
+
+    // Getting Around
+    {cat:'Getting Around', greek:'Πού είναι...', phonetic:'POO EE-neh...', english:'Where is...?'},
+    {cat:'Getting Around', greek:'Πού είναι η τουαλέτα;', phonetic:'POO EE-neh ee too-ah-LEH-tah', english:'Where is the toilet?'},
+    {cat:'Getting Around', greek:'Το ξενοδοχείο', phonetic:'toh kseh-noh-doh-KHEE-oh', english:'The hotel'},
+    {cat:'Getting Around', greek:'Η παραλία', phonetic:'ee pah-rah-LEE-ah', english:'The beach'},
+    {cat:'Getting Around', greek:'Το αεροδρόμιο', phonetic:'toh ah-eh-roh-DROH-mee-oh', english:'The airport'},
+    {cat:'Getting Around', greek:'Ενοικίαση αυτοκινήτου', phonetic:'eh-nee-KAH-see af-toh-kee-NEE-too', english:'Car rental'},
+    {cat:'Getting Around', greek:'Βενζίνη', phonetic:'ven-ZEE-nee', english:'Petrol / Gas'},
+    {cat:'Getting Around', greek:'Στα δεξιά', phonetic:'sta dex-YAH', english:'On the right'},
+    {cat:'Getting Around', greek:'Στα αριστερά', phonetic:'sta ah-ris-teh-RAH', english:'On the left'},
+    {cat:'Getting Around', greek:'Ευθεία', phonetic:'ef-THEE-ah', english:'Straight ahead'},
+    {cat:'Getting Around', greek:'Πόσο κάνει;', phonetic:'POH-soh KAH-nee', english:'How much is it?'},
+    {cat:'Getting Around', greek:'Πόσο απέχει;', phonetic:'POH-soh ah-PEH-khee', english:'How far is it?'},
+    {cat:'Getting Around', greek:'Ταξί', phonetic:'takh-SEE', english:'Taxi'},
+    {cat:'Getting Around', greek:'Λεωφορείο', phonetic:'leh-oh-foh-REE-oh', english:'Bus'},
+
+    // Numbers & Money
+    {cat:'Numbers & Money', greek:'Ένα', phonetic:'EH-nah', english:'One'},
+    {cat:'Numbers & Money', greek:'Δύο', phonetic:'DEE-oh', english:'Two'},
+    {cat:'Numbers & Money', greek:'Τρία', phonetic:'TREE-ah', english:'Three'},
+    {cat:'Numbers & Money', greek:'Τέσσερα', phonetic:'TEH-seh-rah', english:'Four'},
+    {cat:'Numbers & Money', greek:'Πέντε', phonetic:'PEN-deh', english:'Five'},
+    {cat:'Numbers & Money', greek:'Έυρω', phonetic:'EV-roh', english:'Euro (currency)'},
+
+    // Family & Kids
+    {cat:'Family & Kids', greek:'Η οικογένεια', phonetic:'ee ee-koh-YEH-neh-ah', english:'The family'},
+    {cat:'Family & Kids', greek:'Παιδιά', phonetic:'peh-DHYAH', english:'Children'},
+    {cat:'Family & Kids', greek:'Κορίτσι', phonetic:'koh-REE-tsee', english:'Girl'},
+    {cat:'Family & Kids', greek:'Αγόρι', phonetic:'ah-GOH-ree', english:'Boy'},
+
+    // Emergencies
+    {cat:'Emergencies', greek:'Βοήθεια!', phonetic:'voh-EE-thee-AH', english:'Help!'},
+    {cat:'Emergencies', greek:'Χρειάζομαι γιατρό', phonetic:'khree-AH-zoh-mah yah-TROH', english:'I need a doctor'},
+    {cat:'Emergencies', greek:'Καλέστε την αστυνομία', phonetic:'kah-LES-tee teen ah-stee-noh-MEE-ah', english:'Call the police'},
+    {cat:'Emergencies', greek:'Νοσοκομείο', phonetic:'noh-soh-koh-MEE-oh', english:'Hospital'},
+];
+
+function renderLanguage(filter) {
+    filter = (filter || '').toLowerCase();
+    var container = document.getElementById('languageContainer');
+    var categories = {};
+    phrases.forEach(function(p) {
+        if (filter && p.english.toLowerCase().indexOf(filter) < 0 &&
+            p.greek.toLowerCase().indexOf(filter) < 0 &&
+            p.phonetic.toLowerCase().indexOf(filter) < 0 &&
+            p.cat.toLowerCase().indexOf(filter) < 0) return;
+        if (!categories[p.cat]) categories[p.cat] = [];
+        categories[p.cat].push(p);
+    });
+
+    var html = '';
+    for (var cat in categories) {
+        html += '<div class="lang-category">';
+        html += '<div class="lang-category-header" onclick="toggleCategory(this)"><span>' + cat + '</span><span class="arrow">▶</span></div>';
+        html += '<div class="lang-items expanded">';
+        categories[cat].forEach(function(p) {
+            html += '<div class="lang-item">' +
+                '<div class="lang-greek">' + p.greek + '</div>' +
+                '<div class="lang-phonetic">' + p.phonetic + '</div>' +
+                '<div class="lang-english">' + p.english + '</div>' +
+                '</div>';
+        });
+        html += '</div></div>';
+    }
+    if (html === '') html = '<p style="padding:20px;color:#999;">No phrases found.</p>';
+    container.innerHTML = html;
+}
+
+function toggleCategory(header) {
+    var items = header.nextElementSibling;
+    header.classList.toggle('expanded');
+    items.classList.toggle('expanded');
+}
+
+function filterPhrases() {
+    renderLanguage(document.getElementById('langSearch').value);
+}
+
+renderLanguage();
+</script>
+</body>
+</html>
